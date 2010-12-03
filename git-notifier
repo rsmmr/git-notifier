@@ -8,6 +8,7 @@ import tempfile
 import time
 
 Name      = "git-notifier"
+Version   = "0.1"
 CacheFile = ".%s.dat" % Name
 Separator = "\n>---------------------------------------------------------------\n"
 
@@ -61,10 +62,10 @@ class GitConfig:
 
         sender = os.environ["GL_USER"] if "GL_USER" in os.environ else os.getlogin()
 
+        self.hostname = self._git_config("hostname", socket.gethostname())
         self.sender = self._git_config("hooks.sender", sender)
         self.emailprefix = self._git_config("hooks.emailprefix", "[git]")
         self.recipients = self._git_config("mailinglist", os.getlogin())
-        self.hostname = self._git_config("hostname", socket.gethostname())
         self.users = self._git_config("users", None)
         self.log = self._git_config("log", "%s.log" % Name)
         self.noupdate = False
@@ -72,6 +73,13 @@ class GitConfig:
 
         self.maxdiffsize = self._git_config("maxdiffsize", 50)
         self.maxdiffsize *= 1024
+
+        repo = "ssh://%s@%s/%s" % (os.getlogin(), self.hostname, os.path.basename(os.getcwd()))
+
+        if repo.endswith(".git"):
+            repo = repo[0:-4]
+
+        self.repo = self._git_config("repository_uri", repo)
 
         self.parseArgs(args)
 
@@ -177,8 +185,12 @@ def getHeads(state):
 
 def getTags(state):
     for (rev, tag) in [head.split() for head in git("show-ref --tags")]:
-        tag = tag.split("/")[-1]
-        state.tags[tag] = rev
+        # We are only interested in annotaged tags.
+        type = git("cat-file -t %s" % rev)[0]
+
+        if type == "tag":
+            tag = tag.split("/")[-1]
+            state.tags[tag] = rev
 
 def getReachableRefs(state):
     for (type, record) in [(state.heads, True), (state.tags, False)]:
@@ -212,21 +224,20 @@ def deleteTmps():
         os.unlink(tmp)
 
 def mailTag(key, value):
-    return "%-14s: %s" % (key, value)
+    return "%-11s: %s" % (key, value)
 
 def generateMailHeader(subject):
-    repo = "%s@%s/%s" % (os.getlogin(), Config.hostname, os.path.basename(os.getcwd()))
-    if repo.endswith(".git"):
-        repo = repo[0:-4]
-
     (out, fname) = makeTmp()
     print >>out, """From: %s
 To: %s
 Subject: %s %s
 X-Git-Repository: %s
+X-Mailer: %s %s
 
 %s
-""" % (Config.sender, Config.recipients, Config.emailprefix, subject, repo, mailTag("Repository", repo)),
+
+""" % (Config.sender, Config.recipients, Config.emailprefix, subject, Config.repo,
+       Name, Version, mailTag("Repository", Config.repo)),
 
     return (out, fname)
 
@@ -246,7 +257,7 @@ def sendMail(out, fname):
 def entryAdded(key, value, rev):
     log("New %s %s" % (key, value))
 
-    (out, fname) = generateMailHeader("new %s '%s'" % (key, value))
+    (out, fname) = generateMailHeader("%s '%s' created" % (key, value))
 
     print >>out, mailTag("New %s" % key, value)
     print >>out, mailTag("Referencing", rev)
@@ -256,7 +267,7 @@ def entryAdded(key, value, rev):
 def entryDeleted(key, value):
     log("Deleted %s %s" % (key, value))
 
-    (out, fname) = generateMailHeader("deleted %s '%s'" % (key, value))
+    (out, fname) = generateMailHeader("%s '%s' deleted" % (key, value))
 
     print >>out, mailTag("Deleted %s" % key, value)
 
@@ -271,7 +282,8 @@ def commit(current, rev):
 
     (out, fname) = generateMailHeader("%s: %s" % (branches, subject[0]))
 
-    print >>out, mailTag("Reachable from", branches)
+    print >>out, ""
+    print >>out, mailTag("On branches", branches)
 
     show_flags="--stat --no-color --find-copies-harder --pretty=medium --ignore-space-at-eol"
     footer = ""
@@ -325,7 +337,7 @@ else:
 current = getCurrent()
 
 if report:
-    # Check Branches.
+    # Check heads.
     old = set(cache.heads.keys())
     new = set(current.heads.keys())
 
@@ -345,11 +357,11 @@ if report:
     for tag in (old - new):
         entryDeleted("tag", tag)
 
-    # Check commits
+    # Check commits.
     old = set(cache.revs.keys())
     new = set(current.revs.keys())
 
-    # Sort updates by time
+        # Sort updates by time.
     def _key(rev):
         ts = git("show -s '--pretty=format:%%ct' %s" % rev)
         return int(ts[0])
