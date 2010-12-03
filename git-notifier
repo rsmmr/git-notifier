@@ -1,0 +1,363 @@
+#! /usr/bin/env python
+
+import os
+import socket
+import sys
+import subprocess
+import tempfile
+import time
+
+Name      = "git-notifier"
+CacheFile = ".%s.dat" % Name
+Separator = "\n>---------------------------------------------------------------\n"
+
+class State:
+    def __init__(self):
+        self.clear()
+
+    def clear(self):
+        self.heads = {}
+        self.tags = {}
+        self.revs = {}
+
+    def writeTo(self, file):
+        out = open(file, "w")
+
+        for (head, ref) in self.heads.items():
+            print >>out, "head", head, ref
+
+        for (tag, ref) in self.tags.items():
+            print >>out, "tag", tag, ref
+
+        for (rev, ref) in self.revs.items():
+            print >>out, "rev", rev, ",".join(ref)
+
+    def readFrom(self, file):
+        self.clear()
+
+        for line in open(file):
+
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+
+            m = line.split()
+            (type, key, val) = (m[0], m[1], m[2])
+
+            if type == "head":
+                self.heads[key] = val
+
+            elif type == "tag":
+                self.tags[key] = val
+
+            elif type == "rev":
+                self.revs[key] = val.split(",")
+
+            else:
+                error("unknown type %s in cache file" % type)
+
+class GitConfig:
+    def __init__(self, args):
+
+        sender = os.environ["GL_USER"] if "GL_USER" in os.environ else os.getlogin()
+
+        self.sender = self._git_config("hooks.sender", sender)
+        self.emailprefix = self._git_config("hooks.emailprefix", "[git]")
+        self.recipients = self._git_config("mailinglist", os.getlogin())
+        self.hostname = self._git_config("hostname", socket.gethostname())
+        self.users = self._git_config("users", None)
+        self.log = self._git_config("log", "%s.log" % Name)
+        self.noupdate = False
+        self.debug = False
+
+        self.maxdiffsize = self._git_config("maxdiffsize", 50)
+        self.maxdiffsize *= 1024
+
+        self.parseArgs(args)
+
+        if not self.debug:
+            self.log = open(self.log, "w+")
+        else:
+            self.log = sys.stderr
+
+        if not self.users and "GL_LOG" in os.environ:
+            users = os.path.join(os.path.dirname(os.environ["GL_LOG"]), "conf/sender.cfg")
+            if os.path.exists(users):
+                self.users = users
+
+        self.readUsers()
+
+    def parseArgs(self, args):
+
+        def noVal(key, i):
+            if i < len(args) and args[i] == "--%s" % key:
+                self.__dict__[key] = True
+                i += 1
+
+            return i
+
+        def withVal(key, i):
+            if i < len(args) and args[i] == "--%s" % key:
+                if i == len(args) - 1:
+                    error("command line argument %s missing value" % args[i])
+
+                self.__dict__[key] = args[i+1]
+                i += 2
+
+            return i
+
+        i = 0
+        while i < len(args):
+
+            j = i
+            arg = args[i]
+
+            i = withVal("sender", i)
+            i = withVal("emailprefix", i)
+            i = withVal("recipients", i)
+            i = withVal("hostname", i)
+            i = withVal("users", i)
+            i = withVal("log", i)
+            i = noVal("noupdate", i)
+            i = noVal("debug", i)
+
+            if i == j:
+                error("unknown parameter %s" % arg)
+
+    def readUsers(self):
+        if self.users and os.path.exists(self.users):
+            for line in open(self.users):
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+
+                m = line.split()
+
+                if self.sender == m[0]:
+                    self.sender = " ".join(m[1:])
+                    break
+
+    def _git_config(self, key, default):
+        cfg = git(["config %s" % key])
+        return cfg[0] if cfg else default
+
+def log(msg):
+    print >>Config.log, "%s - %s" % (time.asctime(), msg)
+
+def error(msg):
+    log("Error: %s" % msg)
+    sys.exit(1)
+
+def git(args, stdout_to=subprocess.PIPE, all=False):
+    if isinstance(args, tuple) or isinstance(args, list):
+        args = " ".join(args)
+
+    try:
+        child = subprocess.Popen("git " + args, shell=True, stdin=None, stdout=stdout_to, stderr=subprocess.PIPE)
+        (stdout, stderr) = child.communicate()
+    except OSError, e:
+        error("cannot start git: %s" % str(e))
+
+    if child.returncode != 0 and stderr:
+        msg = ": %s" % stderr if stderr else ""
+        error("git child failed with exit code %d%s" % (child.returncode, msg))
+
+    if stdout_to != subprocess.PIPE:
+        return []
+
+    if not all:
+        return [line.strip() for line in stdout.split("\n") if line]
+    else:
+        return stdout.split("\n")
+
+def getHeads(state):
+    for (rev, head) in [head.split() for head in git("show-ref --heads")]:
+        head = head.split("/")[-1]
+        state.heads[head] = rev
+
+def getTags(state):
+    for (rev, tag) in [head.split() for head in git("show-ref --tags")]:
+        tag = tag.split("/")[-1]
+        state.tags[tag] = rev
+
+def getReachableRefs(state):
+    for (type, record) in [(state.heads, True), (state.tags, False)]:
+        for name in type:
+            for rev in git(["rev-list", type[name]]):
+                try:
+                    state.revs[rev] += [name] if record else []
+                except KeyError:
+                    state.revs[rev] = [name] if record else []
+
+def getCurrent():
+    state = State()
+    getHeads(state)
+    getTags(state)
+    getReachableRefs(state)
+
+    return state
+
+Tmps = []
+
+def makeTmp():
+    global Tmps
+
+    (fd, fname) = tempfile.mkstemp(prefix="%s-" % Name, suffix=".tmp")
+    Tmps += [fname]
+
+    return (os.fdopen(fd, "w"), fname)
+
+def deleteTmps():
+    for tmp in Tmps:
+        os.unlink(tmp)
+
+def mailTag(key, value):
+    return "%-14s: %s" % (key, value)
+
+def generateMailHeader(subject):
+    repo = "%s@%s/%s" % (os.getlogin(), Config.hostname, os.path.basename(os.getcwd()))
+    if repo.endswith(".git"):
+        repo = repo[0:-4]
+
+    (out, fname) = makeTmp()
+    print >>out, """From: %s
+To: %s
+Subject: %s %s
+X-Git-Repository: %s
+
+%s
+""" % (Config.sender, Config.recipients, Config.emailprefix, subject, repo, mailTag("Repository", repo)),
+
+    return (out, fname)
+
+def sendMail(out, fname):
+    out.close()
+
+    if Config.debug:
+        for line in open(fname):
+            print "    |", line,
+        print ""
+    else:
+        stdin = subprocess.Popen("/usr/sbin/sendmail -t", shell=True, stdin=subprocess.PIPE).stdin
+        for line in open(fname):
+            print >>stdin, line,
+        stdin.close()
+
+def entryAdded(key, value, rev):
+    log("New %s %s" % (key, value))
+
+    (out, fname) = generateMailHeader("new %s '%s'" % (key, value))
+
+    print >>out, mailTag("New %s" % key, value)
+    print >>out, mailTag("Referencing", rev)
+
+    sendMail(out, fname)
+
+def entryDeleted(key, value):
+    log("Deleted %s %s" % (key, value))
+
+    (out, fname) = generateMailHeader("deleted %s '%s'" % (key, value))
+
+    print >>out, mailTag("Deleted %s" % key, value)
+
+    sendMail(out, fname)
+
+def commit(current, rev):
+    log("New revision %s" % rev)
+
+    branches = ",".join(current.revs[rev])
+
+    subject = git("show '--pretty=format:%%s (%%h)' -s %s" % rev)
+
+    (out, fname) = generateMailHeader("%s: %s" % (branches, subject[0]))
+
+    print >>out, mailTag("Reachable from", branches)
+
+    show_flags="--stat --no-color --find-copies-harder --pretty=medium --ignore-space-at-eol"
+    footer = ""
+
+    show = git("show %s -s %s" % (show_flags, rev))
+
+    for line in show:
+        if "[nodiff]" in line:
+            break
+
+    else:
+
+        (tmp, tname) = makeTmp()
+        git("show -p %s" % rev, stdout_to=tmp)
+        tmp.close()
+
+        size = os.path.getsize(tname)
+
+        if size > Config.maxdiffsize:
+            footer = "\nDiff suppressed because of size. To see it, use:\n\n    git show %s" % rev
+        else:
+            show_flags += " -p"
+
+    show = git("show %s %s" % (show_flags, rev), all=True)
+
+    print >>out, Separator
+
+    for line in show:
+        if line == "---":
+            print >>out, Separator
+        else:
+            print >>out, line
+
+    print >>out, footer
+
+    sendMail(out, fname)
+
+Config = GitConfig(sys.argv[1:])
+
+log("Running for %s" % os.getcwd())
+
+cache = State()
+
+if os.path.exists(CacheFile):
+    cache.readFrom(CacheFile)
+    report = True
+else:
+    log("Initial run. Not generating any mails, just recording current state.")
+    report = False
+
+current = getCurrent()
+
+if report:
+    # Check Branches.
+    old = set(cache.heads.keys())
+    new = set(current.heads.keys())
+
+    for head in (new - old):
+        entryAdded("branch", head, current.heads[head])
+
+    for head in (old - new):
+        entryDeleted("branch", head)
+
+    # Check Tags.
+    old = set(cache.tags.keys())
+    new = set(current.tags.keys())
+
+    for tag in (new - old):
+        entryAdded("tag", tag, current.tags[tag])
+
+    for tag in (old - new):
+        entryDeleted("tag", tag)
+
+    # Check commits
+    old = set(cache.revs.keys())
+    new = set(current.revs.keys())
+
+    # Sort updates by time
+    def _key(rev):
+        ts = git("show -s '--pretty=format:%%ct' %s" % rev)
+        return int(ts[0])
+
+    for rev in sorted(new - old, key=_key):
+        commit(current, rev)
+
+if not Config.noupdate:
+    current.writeTo(CacheFile)
+
+deleteTmps()
