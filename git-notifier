@@ -282,7 +282,7 @@ def commit(current, rev):
 
     (out, fname) = generateMailHeader("%s: %s" % (branches, subject[0]))
 
-    print >>out, mailTag("On branches", branches)
+    print >>out, mailTag("On branch%s" % ("es" len(branches) > 1 else ""), branches)
 
     show_flags="--stat --no-color --find-copies-harder --pretty=medium --ignore-space-at-eol"
     footer = ""
