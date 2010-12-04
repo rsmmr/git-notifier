@@ -276,8 +276,9 @@ def entryDeleted(key, value):
 def commit(current, rev):
     log("New revision %s" % rev)
 
+    branches = current.revs[rev]
     multi = "es" if len(branches) > 1 else ""
-    branches = ",".join(current.revs[rev])
+    branches = ",".join(branches)
 
     subject = git("show '--pretty=format:%%s (%%h)' -s %s" % rev)
 
