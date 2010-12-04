@@ -84,7 +84,7 @@ class GitConfig:
         self.parseArgs(args)
 
         if not self.debug:
-            self.log = open(self.log, "w+")
+            self.log = open(self.log, "a")
         else:
             self.log = sys.stderr
 
