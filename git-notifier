@@ -276,13 +276,14 @@ def entryDeleted(key, value):
 def commit(current, rev):
     log("New revision %s" % rev)
 
+    multi = "es" if len(branches) > 1 else ""
     branches = ",".join(current.revs[rev])
 
     subject = git("show '--pretty=format:%%s (%%h)' -s %s" % rev)
 
     (out, fname) = generateMailHeader("%s: %s" % (branches, subject[0]))
 
-    print >>out, mailTag("On branch%s" % ("es" if len(branches) > 1 else ""), branches)
+    print >>out, mailTag("On branch%s" % multi, branches)
 
     show_flags="--stat --no-color --find-copies-harder --pretty=medium --ignore-space-at-eol"
     footer = ""
