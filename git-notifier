@@ -69,6 +69,7 @@ class GitConfig:
         self.users = self._git_config("hooks.users", None)
         self.log = self._git_config("log", "%s.log" % Name)
         self.noupdate = False
+        self.updateonly = False
         self.debug = False
 
         self.maxdiffsize = self._git_config("maxdiffsize", 50)
@@ -128,6 +129,7 @@ class GitConfig:
             i = withVal("log", i)
             i = noVal("noupdate", i)
             i = noVal("debug", i)
+            i = noVal("updateonly", i)
 
             if i == j:
                 error("unknown parameter %s" % arg)
@@ -180,7 +182,9 @@ def git(args, stdout_to=subprocess.PIPE, all=False):
 
 def getHeads(state):
     for (rev, head) in [head.split() for head in git("show-ref --heads")]:
-        head = head.split("/")[-1]
+        if head.startswith("refs/heads/"):
+            head = head[11:]
+
         state.heads[head] = rev
 
 def getTags(state):
@@ -189,7 +193,9 @@ def getTags(state):
         type = git("cat-file -t %s" % rev)[0]
 
         if type == "tag":
-            tag = tag.split("/")[-1]
+            if tag.startswith("refs/tags/"):
+                tag= tag[10:]
+
             state.tags[tag] = rev
 
 def getReachableRefs(state):
@@ -330,7 +336,7 @@ cache = State()
 
 if os.path.exists(CacheFile):
     cache.readFrom(CacheFile)
-    report = True
+    report = (not Config.updateonly)
 else:
     log("Initial run. Not generating any mails, just recording current state.")
     report = False
