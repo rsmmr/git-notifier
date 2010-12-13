@@ -163,6 +163,13 @@ def git(args, stdout_to=subprocess.PIPE, all=False):
         args = " ".join(args)
 
     try:
+        if Config.debug:
+            print >>sys.stderr, "> git " + args
+    except NameError:
+        # Config may not be defined yet.
+        pass
+
+    try:
         child = subprocess.Popen("git " + args, shell=True, stdin=None, stdout=stdout_to, stderr=subprocess.PIPE)
         (stdout, stderr) = child.communicate()
     except OSError, e:
