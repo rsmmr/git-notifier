@@ -1,0 +1,142 @@
+..	-*- mode: rst -*-
+
+git-notifier
+============
+
+:author: Robin Sommer
+
+
+``git-notifier`` is a script to be used with `git
+<http://www.git.org>`_ as a `post-receive <XXX>`_ hook. Once
+installed, it emails out a summary of all changes each time a user
+pushes an update to the repository. Different from other similar
+scripts, ``git-notifier`` sends exactly one email per change, each
+of which includes a complete diff of all modifications as well as
+the set of branches from which the new revision can be reached. The
+scripts ensure that that each change is mailed out only exactly once
+by keeping a state file of already reported revisions. The script
+integrates nicely with `gitolite <XXX>`_.
+
+Here's example of such a ``git-notifier`` mail::
+
+   XXXX
+
+In addition, ``git-notifier`` also mails updates when branches or
+annotated tags are created or removed.
+
+Download
+--------
+
+You can download the current version here:
+
+    http://www.icir.org/robin/git-notifier-0.1.tar.gz
+
+Installation
+------------
+
+The basic installation is simple: just run the script from
+``hooks/post-receive``, as in::
+
+    #!/bin/sh
+    
+    /full/path/to/git-notifier
+
+By default, the script will send its mails to the user running the
+``git-notifier`` (i.e., the one doing the update). As that's usually
+not the desired recipient, an alternative email address can be
+specified via command line or git options, see the ``mailinglist``
+option below.
+
+Usage
+-----
+
+``git-notifier`` supports the options below. Alternatively to 
+giving them on the command line, all of them can alse be set via
+``git config hooks.<option>``. For example, to set a recipient
+address, do ``git config hooks.mailinglist git-updates@foo.com``:
+
+    ``--debug``
+        Prints the mails that would normally be generated to
+        standard error instead, without sending them. The output
+        also includes some further debugging information, like the
+        git commands being executed during operation.
+
+        Note that in debug mode, the script still updates its state
+        file, i.e., if there are changes that haven't been reported
+        yet, they will only be printed, not mailed out next time. If
+        you don't want that, use ``--noupdate`` as well.
+
+    ``--emailprefix``
+        Specifies a prefix for the mails' subject line. Default is
+        ``[git]``. Note that the name of this option is compatible
+        with some of other git notification scripts. 
+
+    ``--hostname <name>``
+        Defines the hostname to use when building the repository
+        path shown in the notification mails. Default is the
+        canonical name of the system the script is running on. 
+
+    ``--log <file>``
+        Write logging information into the given file. Default is
+        ``git-notifier.log`` inside the repository. 
+
+    ``--mailinglist <address>``
+        Specifies the recipient for all generated mails. Default is
+        mailing to the system account that is running the script.
+
+    ``--maxdiffsize <size in KB>``
+        Limits the size of mails by giving a maximum number of bytes
+        that a diff may have. If the diff for a change is larger
+        than this value, a notification mail is still send out but
+        the diff is excluded (and replaced with a note saying so).
+        Default is 50K. 
+
+    ``--noupdate``
+        Does not update the internal state file, meaning that any
+        updates will be reported *again* next time the script is
+        run.
+
+    ``--sender <address>``
+        Defines the sender address for all generated mails. Default
+        is the user doing the update (if gitolite is used, that's 
+        the gitolite acccount doing the push, not the system account
+        running ``git-notifier``.)
+
+    ``--updateonly``
+        Does not send out any mail notifications but still updates
+        the index. In other words, all recent changes will be marked
+        as "seen", without reporting them.
+
+    ``--users <file>``
+        This is only for installations using gitolite <XXX>, for
+        which the default sender address for all mails would
+        normally be the gitolite user account name of the person
+        doing the push. With this option, one can alternatively
+        specify a file that maps such account names to alternative
+        addresses, which will then be used as the sender for mails.
+
+        The file must consist of line of the form ``<gitolite-user>
+        <sender>``, where sender will be used for the mails and can
+        include spaces. Empty lines and lines starting with ``#``
+        are ignored. It's ok if for a user no entry is found, in
+        which case the default value will be used. 
+
+        For example, if there's a gitolite user account "joe", one
+        could provide a ``users`` file like this::
+
+            joe    Joe Smith <joe@foo.bar>
+
+        Now all mails triggered by Joe will have the specified
+        sender.
+
+        Note that even if ``--users`` is not given, ``git-notifier``
+        will still look for such a file in ``../conf/sender.cfg``',
+        relative to the top-level repository directory. In other
+        words, you can check a file ``sender.cfg`` containing the
+        mappings into gitolite's ``config/`` directory and it should
+        Just Work. 
+
+License
+-------
+
+``git-notifier`` comes with a BSD-style licence.
