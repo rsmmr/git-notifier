@@ -1,10 +1,19 @@
 ..	-*- mode: rst -*-
 
+.. |date| date::
+
 git-notifier
 ============
 
-:author: Robin Sommer
+:Version: 0.1
+:Home: http://www.icir.org/robin/git-notifier
+:Author: Robin Sommer <robin@icir.org>
+:Date: |date|
 
+.. contents::
+
+Introduction
+------------
 
 ``git-notifier`` is a script to be used with `git
 <http://www.git.org>`_ as a `post-receive <XXX>`_ hook. Once
@@ -15,12 +24,52 @@ of which includes a complete diff of all modifications as well as
 the set of branches from which the new revision can be reached. The
 scripts ensure that that each change is mailed out only exactly once
 by keeping a state file of already reported revisions. The script
-integrates nicely with `gitolite <XXX>`_.
+integrates nicely with `gitolite <https://github.com/sitaramc/gitolite>`_.
 
 Here's example of such a ``git-notifier`` mail::
 
-   XXXX
+    Subject: [git/git-notifier] master: Adding www target to Makefile. (7dc1f95)
 
+    Repository : ssh://<removed>/git-notifier
+
+    On branch  : master
+    
+    >---------------------------------------------------------------
+    
+    commit 7dc1f95c97275618d5bde1aaf6760cd7ff6a6ef7
+    Author: Robin Sommer <robin@icir.org>
+    Date:   Sun Dec 19 20:21:38 2010 -0800
+    
+        Adding www target to Makefile.
+    
+    >---------------------------------------------------------------
+    
+     Makefile |    6 ++++++
+     1 files changed, 6 insertions(+), 0 deletions(-)
+    
+    diff --git a/Makefile b/Makefile
+    index e184c66..9c9951b 100644
+    --- a/Makefile
+    +++ b/Makefile
+    @@ -5,6 +5,8 @@ VERSION   = 0.1
+     
+     DISTFILES = git-notifier README COPYING
+     
+    +WWW = $(HOME)/www/git-notifier
+    +
+     all:
+     
+     dist:
+    @@ -13,3 +15,7 @@ dist:
+     	cp $(DISTFILES) git-notifier-$(VERSION)
+     	tar czvf git-notifier-$(VERSION).tgz git-notifier-$(VERSION)
+     	rm -rf git-notifier-$(VERSION)
+    +
+    +www: dist
+    +	rst2html.py README >$(WWW)/index.html
+    +	cp git-notifier-$(VERSION).tgz $(WWW)
+    
+        
 In addition, ``git-notifier`` also mails updates when branches or
 annotated tags are created or removed.
 
@@ -29,7 +78,7 @@ Download
 
 You can download the current version here:
 
-    http://www.icir.org/robin/git-notifier-0.1.tar.gz
+    http://www.icir.org/robin/git-notifier/git-notifier-0.1.tar.gz
 
 Installation
 ------------
