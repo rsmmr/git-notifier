@@ -67,7 +67,7 @@ class GitConfig:
         self.hostname = self._git_config("hostname", socket.gethostname())
         self.sender = self._git_config("hooks.sender", sender)
         self.emailprefix = self._git_config("hooks.emailprefix", "[git]")
-        self.recipients = self._git_config("hooks.mailinglist", whoami)
+        self.mailinglist = self._git_config("hooks.mailinglist", whoami)
         self.users = self._git_config("hooks.users", None)
         self.log = self._git_config("log", "%s.log" % Name)
         self.noupdate = False
@@ -125,7 +125,7 @@ class GitConfig:
 
             i = withVal("sender", i)
             i = withVal("emailprefix", i)
-            i = withVal("recipients", i)
+            i = withVal("mailinglist", i)
             i = withVal("hostname", i)
             i = withVal("users", i)
             i = withVal("log", i)
@@ -251,7 +251,7 @@ X-Mailer: %s %s
 
 %s
 
-""" % (Config.sender, Config.recipients, Config.emailprefix, subject, Config.repo,
+""" % (Config.sender, Config.mailinglist, Config.emailprefix, subject, Config.repo,
        Name, Version, mailTag("Repository", Config.repo)),
 
     return (out, fname)
