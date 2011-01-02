@@ -1,3 +1,7 @@
+0.1-5 | 2011-01-02 10:18:10 -0800
+
+  * Updating update-changes. (Robin Sommer)
+
 0.1-4 | 2011-01-01 22:23:53 -0800 | e201aebe6ab827e2b8b33fb302b9d05bde0d9355
 
   * Now mails are also sent when a head updates to now include further
