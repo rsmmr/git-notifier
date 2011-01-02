@@ -71,7 +71,9 @@ Here's example of such a ``git-notifier`` mail::
     
         
 In addition, ``git-notifier`` also mails updates when branches or
-annotated tags are created or removed.
+annotated tags are created or removed; and it furthermore mails a
+revision summary if a head moves to now include commits already
+reported previously (e.g., on fast-forwards). 
 
 If a commit message contains ``[nodiff]``, the generated mail will
 not include a diff. If a commit message contains ``[nomail]``, no

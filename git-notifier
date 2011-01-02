@@ -340,6 +340,27 @@ def commit(current, rev):
 
     sendMail(out, fname)
 
+def headMoved(head, path):
+    log("Head moved: %s -> %s" % (head, path[-1]))
+
+    subject = git("show '--pretty=format:%%s (%%h)' -s %s" % path[-1])
+
+    (out, fname) = generateMailHeader("%s's head updated: %s" % (head, subject[0]))
+
+    print >>out, "Branch '%s' now includes:" % head
+    print >>out, ""
+
+    for rev in path:
+        print >>out, "    ", git("show -s --oneline --abbrev-commit %s" % rev)[0]
+
+    sendMail(out, fname)
+
+if "-h" in sys.argv or "--help" in sys.argv:
+    print >>sys.stderr, "Usage: %s <options>" % sys.argv[0]
+    print >>sys.stderr, ""
+    print >>sys.stderr, "See README for options."
+    sys.exit(1)
+
 Config = GitConfig(sys.argv[1:])
 
 log("Running for %s" % os.getcwd())
@@ -366,6 +387,8 @@ if report:
     for head in (old - new):
         entryDeleted("branch", head)
 
+    stable_heads = new & old
+
     # Check Tags.
     old = set(cache.tags.keys())
     new = set(current.tags.keys())
@@ -385,8 +408,20 @@ if report:
         ts = git("show -s '--pretty=format:%%ct' %s" % rev)
         return int(ts[0])
 
-    for rev in sorted(new - old, key=_key):
+    new_revs = new - old
+
+    for rev in sorted(new_revs, key=_key):
         commit(current, rev)
+
+    # See if heads have moved to include already reported revisions.
+    for head in stable_heads:
+        old_rev = cache.heads[head]
+        new_rev = current.heads[head]
+
+        path = git(["rev-list", "--reverse", "--date-order", new_rev, "^%s" % old_rev])
+
+        if len(set(path) - new_revs):
+            headMoved(head, path)
 
 if not Config.noupdate:
     current.writeTo(CacheFile)

@@ -1,16 +1,21 @@
+0.1-4 | 2011-01-01 22:23:53 -0800 | e201aebe6ab827e2b8b33fb302b9d05bde0d9355
+
+  * Now mails are also sent when a head updates to now include further
+    commits that have already been reported earlier (e.g., on
+    fast-forwards). These mails summarize all revisions on the path from
+    its previous state to the new head position. This is experimental at
+    this point. (Robin Sommer)
+
+  * The script now checks for "-h" or "--help" as a command-line
+    option, and prints a short (and not very helpful) usage message
+    if found. (Robin Sommer)
+
 0.1-3 | 2011-01-01 21:44:11 -0800 | 94154e05ff29522e256803d2cfe9b7d98d28b138
 
   * Renaming the "recipients" options to "mailinglist", as it was
     already documented. (Matthias Vallentin)
 
 0.1-2 | 2011-01-01 21:41:09 -0800 | b650d20a8d10c9bc8de20c3715c9b1dab9100288
-
-  * Adding "[nomail]" option: if that tag is included in a commit
-    message, no mail will be send for that change. Also, documenting the
-    already existing "[nodiff]" option: if included in a commit message,
-    no diff will be included for that change. (Robin Sommer)
-
-0.1-2 | 2011-01-01 21:40:17 -0800 | 702aa7f477df33d4da38db20943a9066acff5315
 
   * Adding "[nomail]" option: if that tag is included in a commit
     message, no mail will be send for that change. Also, documenting the
