@@ -1,0 +1,14 @@
+0.1-2 | 2011-01-01 21:40:17 -0800 | 702aa7f477df33d4da38db20943a9066acff5315
+
+  * Adding "[nomail]" option: if that tag is included in a commit
+    message, no mail will be send for that change. Also, documenting the
+    already existing "[nodiff]" option: if included in a commit message,
+    no diff will be included for that change. (Robin Sommer)
+
+  * Adding update-changes script. (Robin Sommer)
+
+
+0.1 | 2010-12-19 20:30:38 -0800 | 2606f82b91b0984c9de050c001729ce45dfb69cd
+
+  * Initial version.
+

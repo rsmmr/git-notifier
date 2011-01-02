@@ -73,6 +73,10 @@ Here's example of such a ``git-notifier`` mail::
 In addition, ``git-notifier`` also mails updates when branches or
 annotated tags are created or removed.
 
+If a commit message contains ``[nodiff]``, the generated mail will
+not include a diff. If a commit message contains ``[nomail]``, no
+mail will be send for that change. 
+
 Download
 --------
 

@@ -11,6 +11,8 @@ Name      = "git-notifier"
 Version   = "0.1"
 CacheFile = ".%s.dat" % Name
 Separator = "\n>---------------------------------------------------------------\n"
+NoDiff    = "[nodiff]"
+NoMail    = "[nomail]"
 
 class State:
     def __init__(self):
@@ -305,8 +307,11 @@ def commit(current, rev):
     show = git("show %s -s %s" % (show_flags, rev))
 
     for line in show:
-        if "[nodiff]" in line:
+        if NoDiff in line:
             break
+
+        if NoMail in line:
+            return
 
     else:
 
