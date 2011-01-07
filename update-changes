@@ -10,6 +10,11 @@ function normed_git_describe
     echo -n `git describe --always $1 2>/dev/null | sed 's/^v//g' | sed "s/-[^-]*$//g" | sed 's/ //g'`
 }
 
+if [ "$1" == "-I" ]; then
+    echo Initializing CHANGES file.
+    init=1
+fi
+
 changes=CHANGES
 version=VERSION
 
@@ -22,6 +27,15 @@ version_full=`git describe 2>/dev/null  | sed 's/^v//g'`
 if [ "$version_short" == "" ]; then
     echo "can't generate version_short string"
     exit 1
+fi
+
+if [ "$init" == "1" ]; then
+   echo >>$changes
+   printf '%s | ' $version_short >$changes
+   git show -s "--pretty=tformat:%ci" master >>$changes
+   echo >>$changes
+   echo "  * Starting $changes." >>$changes
+   exit 0
 fi
 
 # Get the last revision for which we recorded entries.

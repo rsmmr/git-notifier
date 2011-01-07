@@ -269,6 +269,11 @@ def sendMail(out, fname):
             print >>stdin, line,
         stdin.close()
 
+    # Wait a bit in case we're going to send more mails. Otherwise, the mails
+    # get sent back-to-back and are likely to end up with identical timestamps,
+    # which may then make them appear to have arrived in the wrong order. 
+    time.sleep(2)
+
 def entryAdded(key, value, rev):
     log("New %s %s" % (key, value))
 
