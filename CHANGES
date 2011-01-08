@@ -1,3 +1,10 @@
+0.2 | 2011-01-07 10:06:31 -0800
+
+  * The script now waits a little bit after sending out each mail.
+    Before, mails sent back-to-back could arrive with identical
+    timestamps, making it harder to determine their actual order.
+    (Robin Sommer)
+
 0.1-5 | 2011-01-02 10:18:10 -0800
 
   * Updating update-changes. (Robin Sommer)

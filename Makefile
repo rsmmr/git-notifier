@@ -1,9 +1,9 @@
 #
 # Makefile is used only for building the distribution.
 
-VERSION   = 0.1
+VERSION   = 0.2
 
-DISTFILES = git-notifier README COPYING
+DISTFILES = git-notifier Makefile README COPYING CHANGES VERSION
 
 WWW = $(HOME)/www/git-notifier
 
@@ -19,3 +19,4 @@ dist:
 www: dist
 	rst2html.py README >$(WWW)/index.html
 	cp git-notifier-$(VERSION).tar.gz $(WWW)
+	cp CHANGES $(WWW)
