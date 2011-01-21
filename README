@@ -116,6 +116,15 @@ giving them on the command line, all of them can alse be set via
 ``git config hooks.<option>``. For example, to set a recipient
 address, do ``git config hooks.mailinglist git-updates@foo.com``:
 
+    ``--allchanges <branches>``
+        Lists branches for which *all* changes made to them should
+        be mailed out as straight diffs to their previous state,
+        independent of whether the corresponding commit has already
+        been reported in the past. This might for example make sense
+        for ``master`` if one wants to closely track any
+        modification applied. ``<branches>`` is a list of
+        command-separated names of heads to treat this way.
+
     ``--debug``
         Prints the mails that would normally be generated to
         standard error instead, without sending them. The output
@@ -126,6 +135,19 @@ address, do ``git config hooks.mailinglist git-updates@foo.com``:
         file, i.e., if there are changes that haven't been reported
         yet, they will only be printed, not mailed out next time. If
         you don't want that, use ``--noupdate`` as well.
+
+    ``--diff [rev1..]rev2``
+        Mails out diffs between all revisions on the first parent's
+        way from ``rev1`` to ``rev2``. This option produces output
+        similar to that of a head moving forward which is listed
+        with ``--allchanges``. If ``rev1`` is skipped, ``rev2~1`` is
+        assumed.
+
+        This option is primarily for debugging and retropective
+        (re-)generation of this outut, and does not change the
+        current notifier state in any way. The main difference to
+        ``--manual`` is that it considers only revision on the first
+        parent's path, and mails out actual diffs between these.
 
     ``--emailprefix``
         Specifies a prefix for the mails' subject line. Default is
@@ -144,6 +166,15 @@ address, do ``git config hooks.mailinglist git-updates@foo.com``:
     ``--mailinglist <address>``
         Specifies the recipient for all generated mails. Default is
         mailing to the system account that is running the script.
+
+    ``--manual [rev1..]rev2``
+        Mails out notifications for all revisions on the way from
+        ``rev1`` to ``rev2``. If ``rev1`` is skipped, ``rev2~1`` is
+        assumed.
+
+        This option is primarily for debugging and retropective
+        (re-)generation of this output, and does not change the
+        current notifier state in any way.
 
     ``--maxdiffsize <size in KB>``
         Limits the size of mails by giving a maximum number of bytes

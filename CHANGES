@@ -1,3 +1,39 @@
+0.2-2 | 2011-01-20 20:26:26 -0800
+
+  * New options, two of them primarily for debugging and manual
+    generation of notifications. (Robin Sommer)
+
+        ``--allchanges <branches>``
+            Lists branches for which *all* changes made to them should
+            be mailed out as straight diffs to their previous state,
+            independent of whether the corresponding commit has already
+            been reported in the past. This might for example make sense
+            for ``master`` if one wants to closely track any
+            modification applied. ``<branches>`` is a list of
+            command-separated names of heads to treat this way.
+
+        ``--diff [rev1..]rev2``
+            Mails out diffs between all revisions on the first parent's
+            way from ``rev1`` to ``rev2``. This option produces output
+            similar to that of a head moving forward which is listed
+            with ``--allchanges``. If ``rev1`` is skipped, ``rev2~1`` is
+            assumed.
+
+            This option is primarily for debugging and retropective
+            (re-)generation of this outut, and does not change the
+            current notifier state in any way. The main difference to
+            ``--manual`` is that it considers only revision on the first
+            parent's path, and mails out actual diffs between these.
+
+        ``--manual [rev1..]rev2``
+            Mails out notifications for all revisions on the way from
+            ``rev1`` to ``rev2``. If ``rev1`` is skipped, ``rev2~1`` is
+            assumed.
+
+            This option is primarily for debugging and retropective
+            (re-)generation of this output, and does not change the
+            current notifier state in any way.
+
 0.2 | 2011-01-07 10:06:31 -0800
 
   * The script now waits a little bit after sending out each mail.
