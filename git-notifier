@@ -77,7 +77,8 @@ class GitConfig:
         self.debug = False
         self.diff = None
         self.manual = None
-        self.allchanges = set()
+        self.allchanges = self._git_config("hooks.allchanges", "")
+        self.parseAllChanges()
 
         self.maxdiffsize = self._git_config("maxdiffsize", 50)
         self.maxdiffsize *= 1024
@@ -102,6 +103,10 @@ class GitConfig:
                 self.users = users
 
         self.readUsers()
+
+    def parseAllChanges(self):
+        if not isinstance(self.allchanges, set):
+            self.allchanges = set([head.strip() for head in self.allchanges.split(",")])
 
     def parseArgs(self, args):
 
@@ -304,7 +309,7 @@ def entryDeleted(key, value):
     sendMail(out, fname)
 
 # Sends a mail for a notification consistent of two parts: (1) the output of a
-# show command, and (2) the output of a diff command. 
+# show command, and (2) the output of a diff command.
 def sendChangeMail(subject, heads, show_cmd, diff_cmd):
 
     (out, fname) = generateMailHeader(subject)
@@ -355,7 +360,7 @@ def sendChangeMail(subject, heads, show_cmd, diff_cmd):
         print >>out, "-- "
         print >>out, "debug: show_cmd = git %s" % show_cmd
         print >>out, "debug: diff_cmd = git %s" % diff_cmd
-        
+
     sendMail(out, fname)
 
 # Sends notification for a specific revision.
@@ -447,6 +452,9 @@ else:
 
 current = getCurrent()
 
+if Config.allchanges:
+    Config.parseAllChanges()
+
 if Config.diff:
     # Manual diff mode. The argument must be of the form "[old-rev..]new-rev".
     path = [rev.strip() for rev in Config.diff.split("..")]
@@ -470,9 +478,6 @@ if Config.manual:
     reportPath(current, revs)
 
     sys.exit(0)
-
-if Config.allchanges:
-    Config.allchanges = set([head.strip() for head in Config.allchanges.split(",")])
 
 if report:
     # Check for changes to the set of heads.
