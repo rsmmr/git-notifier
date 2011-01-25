@@ -1,3 +1,7 @@
+0.2-3 | 2011-01-25 09:39:58 -0800
+
+  * Now hooks.allchanges can be specified via "git config". (Robin Sommer)
+
 0.2-2 | 2011-01-20 20:26:26 -0800
 
   * New options, two of them primarily for debugging and manual
