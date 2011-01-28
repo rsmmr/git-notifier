@@ -47,7 +47,13 @@ class State:
                 continue
 
             m = line.split()
-            (type, key, val) = (m[0], m[1], m[2])
+
+            if len(m) == 3:
+                (type, key, val) = (m[0], m[1], m[2])
+            else:
+                # No heads!
+                (type, key) = (m[0], m[1])
+                val = ""
 
             if type == "head":
                 self.heads[key] = val
