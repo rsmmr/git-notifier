@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import os
+import shutil
 import socket
 import sys
 import subprocess
@@ -26,6 +27,12 @@ class State:
         self.reported = set() # Revs reported this run so far.
 
     def writeTo(self, file):
+        if os.path.exists(CacheFile):
+            try:
+                shutil.move(CacheFile, CacheFile + ".bak")
+            except IOError:
+                pass
+
         out = open(file, "w")
 
         for (head, ref) in self.heads.items():
