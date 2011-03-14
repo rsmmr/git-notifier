@@ -1,6 +1,15 @@
+0.2-7 | 2011-03-14 13:26:04 -0700
+
+  * Now using gitolite's GL_ADMINDIR environment variable to locate
+    the default sender.cfg.
+
+  * We now keep the previous state file as *.bak.
+    
+  * Fixing a bug with revisions not being part of any head.
+
 0.2-3 | 2011-01-25 09:39:58 -0800
 
-  * Now hooks.allchanges can be specified via "git config". (Robin Sommer)
+  * Now hooks.allchanges can be specified via "git config".
 
 0.2-2 | 2011-01-20 20:26:26 -0800
 

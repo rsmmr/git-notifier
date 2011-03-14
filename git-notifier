@@ -110,8 +110,8 @@ class GitConfig:
         else:
             self.log = sys.stderr
 
-        if not self.users and "GL_LOG" in os.environ:
-            users = os.path.join(os.path.dirname(os.environ["GL_LOG"]), "../conf/sender.cfg")
+        if not self.users and "GL_ADMINDIR" in os.environ:
+            users = os.path.join(os.environ["GL_ADMINDIR"], "conf/sender.cfg")
             if os.path.exists(users):
                 self.users = users
 
