@@ -444,7 +444,7 @@ def headMoved(head, path):
     print >>out, ""
 
     for rev in path:
-        print >>out, "    ", git("show -s --oneline --abbrev-commit %s" % rev)[0]
+        print >>out, "    ", git("show -s --pretty=oneline --abbrev-commit %s" % rev)[0]
 
     sendMail(out, fname)
 
