@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+import optparse
 import os
 import shutil
 import socket
@@ -14,6 +15,29 @@ CacheFile = ".%s.dat" % Name
 Separator = "\n>---------------------------------------------------------------\n"
 NoDiff    = "[nodiff]"
 NoMail    = "[nomail]"
+
+gitolite = "GL_USER" in os.environ
+whoami = os.environ["LOGNAME"]
+sender = os.environ["GL_USER"] if gitolite else whoami
+
+Options = [
+    # Name, argument, default, help,
+    ("allchanges", True, set(), "branches for which *all* changes are to be reported"),
+    ("debug", False, False, "enable debug output"),
+    ("diff", True, None, "mail out diffs between two revisions"),
+    ("emailprefix", True, "[git]", "Subject prefix for mails"),
+    ("hostname", True, socket.gethostname(), "host where the repository is hosted"),
+    ("log", True, "%s.log" % Name, "set log output"),
+    ("mailinglist", True, whoami, "destination address for mails"),
+    ("manual", True, None, "notifiy for a manually given set of revisions"),
+    ("maxdiffsize", True, 50, "limit the size of diffs in mails (KB)"),
+    ("noupdate", False, False, "do not update the state file"),
+    ("repouri", True, None, "full URI for the repository"),
+    ("sender", True, sender, "sender address for mails"),
+    ("link", True, None, "Link to insert into mail, %s will be replaced with revision"),
+    ("updateonly", False, False, "update state file only, no mails"),
+    ("users", True, None, "location of a user-to-email mapping file"),
+    ]
 
 class State:
     def __init__(self):
@@ -76,34 +100,11 @@ class State:
 
 class GitConfig:
     def __init__(self, args):
-        whoami = os.environ["LOGNAME"]
-        sender = os.environ["GL_USER"] if "GL_USER" in os.environ else whoami
-
-        self.hostname = self._git_config("hostname", socket.gethostname())
-        self.sender = self._git_config("hooks.sender", sender)
-        self.emailprefix = self._git_config("hooks.emailprefix", "[git]")
-        self.mailinglist = self._git_config("hooks.mailinglist", whoami)
-        self.users = self._git_config("hooks.users", None)
-        self.log = self._git_config("log", "%s.log" % Name)
-        self.noupdate = False
-        self.updateonly = False
-        self.debug = False
-        self.diff = None
-        self.manual = None
-        self.allchanges = self._git_config("hooks.allchanges", "")
-        self.parseAllChanges()
-
-        self.maxdiffsize = self._git_config("maxdiffsize", 50)
-        self.maxdiffsize *= 1024
-
-        repo = "ssh://%s@%s/%s" % (whoami, self.hostname, os.path.basename(os.getcwd()))
-
-        if repo.endswith(".git"):
-            repo = repo[0:-4]
-
-        self.repo = self._git_config("repository_uri", repo)
-
         self.parseArgs(args)
+        self.maxdiffsize *= 1024 # KBytes to bytes.
+
+        if self.allchanges and not isinstance(self.allchanges, set):
+            self.allchanges = set([head.strip() for head in self.allchanges.split(",")])
 
         if not self.debug:
             self.log = open(self.log, "a")
@@ -117,51 +118,34 @@ class GitConfig:
 
         self.readUsers()
 
-    def parseAllChanges(self):
-        if not isinstance(self.allchanges, set):
-            self.allchanges = set([head.strip() for head in self.allchanges.split(",")])
-
     def parseArgs(self, args):
 
-        def noVal(key, i):
-            if i < len(args) and args[i] == "--%s" % key:
-                self.__dict__[key] = True
-                i += 1
+        parser = optparse.OptionParser(version=Version)
 
-            return i
+        for (name, arg, default, help) in Options:
+            defval = self._git_config(name, default)
 
-        def withVal(key, i):
-            if i < len(args) and args[i] == "--%s" % key:
-                if i == len(args) - 1:
-                    error("command line argument %s missing value" % args[i])
+            if isinstance(default, int):
+                defval = int(defval)
 
-                self.__dict__[key] = args[i+1]
-                i += 2
+            if not arg:
+                defval = bool(defval)
 
-            return i
+            if not arg:
+                action = "store_true" if not default else "store_false"
+                parser.add_option("--%s" % name, action=action, dest=name, default=defval, help=help)
 
-        i = 0
-        while i < len(args):
+            else:
+                type = "string" if not isinstance(default, int) else "int"
+                parser.add_option("--%s" % name, action="store", type=type, default=defval, dest=name, help=help)
 
-            j = i
-            arg = args[i]
+        (options, args) = parser.parse_args(args)
 
-            i = withVal("sender", i)
-            i = withVal("emailprefix", i)
-            i = withVal("mailinglist", i)
-            i = withVal("hostname", i)
-            i = withVal("users", i)
-            i = withVal("log", i)
-            i = withVal("allchanges", i)
-            i = withVal("diff", i)
-            i = withVal("manual", i)
-            i = noVal("noupdate", i)
-            i = noVal("debug", i)
-            i = noVal("updateonly", i)
+        if len(args) != 0:
+            parser.error("incorrect number of arguments")
 
-            if i == j:
-                print >>sys.stderr, "unknown parameter %s" % arg
-                sys.exit(1)
+        for (name, arg, default, help) in Options:
+            self.__dict__[name] = options.__dict__[name]
 
     def readUsers(self):
         if self.users and os.path.exists(self.users):
@@ -177,7 +161,7 @@ class GitConfig:
                     break
 
     def _git_config(self, key, default):
-        cfg = git(["config %s" % key])
+        cfg = git(["config hooks.%s" % key])
         return cfg[0] if cfg else default
 
 def log(msg):
@@ -269,6 +253,21 @@ def mailTag(key, value):
     return "%-11s: %s" % (key, value)
 
 def generateMailHeader(subject):
+
+    repo = Config.repouri
+
+    if not repo:
+
+        if gitolite:
+            # Gitolite version.
+            repo = "ssh://%s@%s/%s" % (whoami, Config.hostname, os.path.basename(os.getcwd()))
+        else:
+            # Standard version.
+            repo = "ssh://%s/%s" % (Config.hostname, os.path.basename(os.getcwd()))
+
+        if repo.endswith(".git"):
+            repo = repo[0:-4]
+
     (out, fname) = makeTmp()
     print >>out, """From: %s
 To: %s
@@ -278,8 +277,8 @@ X-Mailer: %s %s
 
 %s
 
-""" % (Config.sender, Config.mailinglist, Config.emailprefix, subject, Config.repo,
-       Name, Version, mailTag("Repository", Config.repo)),
+""" % (Config.sender, Config.mailinglist, Config.emailprefix, subject, repo,
+       Name, Version, mailTag("Repository", repo)),
 
     return (out, fname)
 
@@ -331,6 +330,11 @@ def sendChangeMail(subject, heads, show_cmd, diff_cmd):
     heads = ",".join(heads)
 
     print >>out, mailTag("On branch%s" % multi, heads)
+
+    if Config.link:
+        url = Config.link.replace("%s", rev)
+        print >>out, ""
+        print >>out, mailTag("Link", url)
 
     footer = ""
     show = git(show_cmd)
@@ -444,15 +448,13 @@ def headMoved(head, path):
 
     sendMail(out, fname)
 
-if "-h" in sys.argv or "--help" in sys.argv:
-    print >>sys.stderr, "Usage: %s <options>" % sys.argv[0]
-    print >>sys.stderr, ""
-    print >>sys.stderr, "See README for options."
-    sys.exit(1)
-
 Config = GitConfig(sys.argv[1:])
 
 log("Running for %s" % os.getcwd())
+
+if Config.debug:
+    for (name, arg, default, help) in Options:
+        print >>sys.stderr, "[Option %s: %s]" % (name, Config.__dict__[name])
 
 cache = State()
 
@@ -464,9 +466,6 @@ else:
     report = False
 
 current = getCurrent()
-
-if Config.allchanges:
-    Config.parseAllChanges()
 
 if Config.diff:
     # Manual diff mode. The argument must be of the form "[old-rev..]new-rev".

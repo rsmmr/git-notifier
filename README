@@ -33,32 +33,32 @@ Here's example of such a ``git-notifier`` mail::
     Repository : ssh://<removed>/git-notifier
 
     On branch  : master
-    
+
     >---------------------------------------------------------------
-    
+
     commit 7dc1f95c97275618d5bde1aaf6760cd7ff6a6ef7
     Author: Robin Sommer <robin@icir.org>
     Date:   Sun Dec 19 20:21:38 2010 -0800
-    
+
         Adding www target to Makefile.
-    
+
     >---------------------------------------------------------------
-    
+
      Makefile |    6 ++++++
      1 files changed, 6 insertions(+), 0 deletions(-)
-    
+
     diff --git a/Makefile b/Makefile
     index e184c66..9c9951b 100644
     --- a/Makefile
     +++ b/Makefile
     @@ -5,6 +5,8 @@ VERSION   = 0.1
-     
+
      DISTFILES = git-notifier README COPYING
-     
+
     +WWW = $(HOME)/www/git-notifier
     +
      all:
-     
+
      dist:
     @@ -13,3 +15,7 @@ dist:
      	cp $(DISTFILES) git-notifier-$(VERSION)
@@ -68,16 +68,16 @@ Here's example of such a ``git-notifier`` mail::
     +www: dist
     +	rst2html.py README >$(WWW)/index.html
     +	cp git-notifier-$(VERSION).tgz $(WWW)
-    
-        
+
+
 In addition, ``git-notifier`` also mails updates when branches or
 annotated tags are created or removed; and it furthermore mails a
 revision summary if a head moves to now include commits already
-reported previously (e.g., on fast-forwards). 
+reported previously (e.g., on fast-forwards).
 
 If a commit message contains ``[nodiff]``, the generated mail will
 not include a diff. If a commit message contains ``[nomail]``, no
-mail will be send for that change. 
+mail will be send for that change.
 
 Download
 --------
@@ -99,7 +99,7 @@ The basic installation is simple: just run the script from
 ``hooks/post-receive``, as in::
 
     #!/bin/sh
-    
+
     /full/path/to/git-notifier
 
 By default, the script will send its mails to the user running the
@@ -111,7 +111,7 @@ option below.
 Usage
 -----
 
-``git-notifier`` supports the options below. Alternatively to 
+``git-notifier`` supports the options below. Alternatively to
 giving them on the command line, all of them can alse be set via
 ``git config hooks.<option>``. For example, to set a recipient
 address, do ``git config hooks.mailinglist git-updates@foo.com``:
@@ -152,16 +152,22 @@ address, do ``git config hooks.mailinglist git-updates@foo.com``:
     ``--emailprefix``
         Specifies a prefix for the mails' subject line. Default is
         ``[git]``. Note that the name of this option is compatible
-        with some of other git notification scripts. 
+        with some of other git notification scripts.
 
     ``--hostname <name>``
         Defines the hostname to use when building the repository
         path shown in the notification mails. Default is the
-        canonical name of the system the script is running on. 
+        canonical name of the system the script is running on.
+
+    ``--link <url>``
+        Specifies a URL that will be included into notification mails
+        for locating a changeset online. The URL can contain a "%s"
+        placeholder that will be replaced with the corresponding git
+        revision number.
 
     ``--log <file>``
         Write logging information into the given file. Default is
-        ``git-notifier.log`` inside the repository. 
+        ``git-notifier.log`` inside the repository.
 
     ``--mailinglist <address>``
         Specifies the recipient for all generated mails. Default is
@@ -181,7 +187,7 @@ address, do ``git config hooks.mailinglist git-updates@foo.com``:
         that a diff may have. If the diff for a change is larger
         than this value, a notification mail is still send out but
         the diff is excluded (and replaced with a note saying so).
-        Default is 50K. 
+        Default is 50K.
 
     ``--noupdate``
         Does not update the internal state file, meaning that any
@@ -190,7 +196,7 @@ address, do ``git config hooks.mailinglist git-updates@foo.com``:
 
     ``--sender <address>``
         Defines the sender address for all generated mails. Default
-        is the user doing the update (if gitolite is used, that's 
+        is the user doing the update (if gitolite is used, that's
         the gitolite acccount doing the push, not the system account
         running ``git-notifier``.)
 
@@ -211,7 +217,7 @@ address, do ``git config hooks.mailinglist git-updates@foo.com``:
         <sender>``, where sender will be used for the mails and can
         include spaces. Empty lines and lines starting with ``#``
         are ignored. It's ok if for a user no entry is found, in
-        which case the default value will be used. 
+        which case the default value will be used.
 
         For example, if there's a gitolite user account "joe", one
         could provide a ``users`` file like this::
@@ -226,7 +232,7 @@ address, do ``git config hooks.mailinglist git-updates@foo.com``:
         relative to the top-level repository directory. In other
         words, you can check a file ``sender.cfg`` containing the
         mappings into gitolite's ``config/`` directory and it should
-        Just Work. 
+        Just Work.
 
 License
 -------

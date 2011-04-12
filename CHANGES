@@ -1,3 +1,28 @@
+0.2-10 | 2011-04-23 18:46:14 -0700
+
+  * Adding git repository to README.
+    
+  * Compatibility fix to support older git versions. (Simon Marlow)
+    
+  * New option 'link' to define a URL that will be inserted into
+    notification mails.
+    
+  * New option 'repouri' to overide the automatically derived
+    repository location.
+    
+  * All options can now indeed be given via git-config (as the README
+    already claims), and they are now all located in the hooks.*
+    namespace.
+    
+  * Integer options are now correctly converted to ints when read from
+    git-config.
+    
+  * Internal rewrite of how options are implemented.
+
+  * Removing the update-changes script from the repository.
+    
+  Some of the new functionality is based on patches by Simon Marlow.
+
 0.2-7 | 2011-03-14 13:26:04 -0700
 
   * Now using gitolite's GL_ADMINDIR environment variable to locate
