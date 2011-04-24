@@ -1,11 +1,14 @@
 ..	-*- mode: rst -*-
 
+.. include:: version.rst
+
 .. |date| date::
+
 
 git-notifier
 ============
 
-:Version: 0.2
+:Version: |version|
 :Home: http://www.icir.org/robin/git-notifier
 :Author: Robin Sommer <robin@icir.org>
 :Date: |date|
@@ -82,9 +85,16 @@ mail will be send for that change.
 Download
 --------
 
-You can download the current version here:
+The current release is `git-notifier 0.2
+<http://www.icir.org/robin/git-notifier/git-notifier-0.2.tar.gz>`_ 
 
-    http://www.icir.org/robin/git-notifier/git-notifier-0.2.tar.gz
+Not surprisingly, ``git-notifier`` is maintained in a git repository
+that you clone:
+
+    git clone git://git.icir.org/git-notifier
+
+You can also `browse the repository
+<http://git.icir.org/git-notifier.git>`_ 
 
 History
 -------

@@ -10,7 +10,7 @@ import tempfile
 import time
 
 Name      = "git-notifier"
-Version   = "0.2"
+Version   = "0.2-git"
 CacheFile = ".%s.dat" % Name
 Separator = "\n>---------------------------------------------------------------\n"
 NoDiff    = "[nodiff]"
