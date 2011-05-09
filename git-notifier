@@ -46,7 +46,7 @@ class State:
     def clear(self):
         self.heads = {}
         self.tags = {}
-        self.revs = {}
+        self.revs = set()
 
         self.reported = set() # Revs reported this run so far.
 
@@ -65,8 +65,8 @@ class State:
         for (tag, ref) in self.tags.items():
             print >>out, "tag", tag, ref
 
-        for (rev, ref) in self.revs.items():
-            print >>out, "rev", rev, ",".join(ref)
+        for rev in self.revs:
+            print >>out, "rev", rev
 
     def readFrom(self, file):
         self.clear()
@@ -82,9 +82,8 @@ class State:
             if len(m) == 3:
                 (type, key, val) = (m[0], m[1], m[2])
             else:
-                # No heads!
-                (type, key) = (m[0], m[1])
-                val = ""
+                # No heads.
+                (type, key, val) = (m[0], m[1], "")
 
             if type == "head":
                 self.heads[key] = val
@@ -93,7 +92,7 @@ class State:
                 self.tags[key] = val
 
             elif type == "rev":
-                self.revs[key] = val.split(",")
+                self.revs.add(key)
 
             else:
                 error("unknown type %s in cache file" % type)
@@ -219,13 +218,8 @@ def getTags(state):
             state.tags[tag] = rev
 
 def getReachableRefs(state):
-    for (type, record) in [(state.heads, True), (state.tags, False)]:
-        for name in type:
-            for rev in git(["rev-list", type[name]]):
-                try:
-                    state.revs[rev] += [name] if record else []
-                except KeyError:
-                    state.revs[rev] = [name] if record else []
+    for rev in git(["rev-list"] + state.heads.keys() + state.tags.keys()):
+        state.revs.add(rev)
 
 def getCurrent():
     state = State()
@@ -389,7 +383,7 @@ def commit(current, rev):
     log("New revision %s" % rev)
     current.reported.add(rev)
 
-    heads = current.revs[rev]
+    heads = [head.split()[-1] for head in git("branch --contains=%s" % rev)]
 
     if len(set(heads) - Config.allchanges) == 0:
         # We have reported full diffs for all already.
@@ -530,8 +524,8 @@ if report:
         ts = git("show -s '--pretty=format:%%ct' %s" % rev)
         return int(ts[0])
 
-    old = set(cache.revs.keys())
-    new = set(current.revs.keys())
+    old = set(cache.revs)
+    new = set(current.revs)
 
     new_revs = new - old
 
