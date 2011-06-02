@@ -1,4 +1,8 @@
-0.2-10 | 2011-04-23 18:46:14 -0700
+0.3 | 2011-05-08 21:33:08 -0700
+
+  * Significant speed improvement: we now query git for the branches
+    reachable from a revision rather than trying to figure it out
+    ourselves. Based on a suggestion by Simon Marlow.
 
   * Adding git repository to README.
     
@@ -21,10 +25,6 @@
 
   * Removing the update-changes script from the repository.
     
-  Some of the new functionality is based on patches by Simon Marlow.
-
-0.2-7 | 2011-03-14 13:26:04 -0700
-
   * Now using gitolite's GL_ADMINDIR environment variable to locate
     the default sender.cfg.
 
@@ -32,11 +32,7 @@
     
   * Fixing a bug with revisions not being part of any head.
 
-0.2-3 | 2011-01-25 09:39:58 -0800
-
   * Now hooks.allchanges can be specified via "git config".
-
-0.2-2 | 2011-01-20 20:26:26 -0800
 
   * New options, two of them primarily for debugging and manual
     generation of notifications.

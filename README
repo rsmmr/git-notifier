@@ -85,11 +85,11 @@ mail will be send for that change.
 Download
 --------
 
-The current release is `git-notifier 0.2
-<http://www.icir.org/robin/git-notifier/git-notifier-0.2.tar.gz>`_ 
+The current release is `git-notifier 0.3
+<http://www.icir.org/robin/git-notifier/git-notifier-0.3.tar.gz>`_ 
 
 Not surprisingly, ``git-notifier`` is maintained in a git repository
-that you clone:
+that you clone::
 
     git clone git://git.icir.org/git-notifier
 
