@@ -469,7 +469,8 @@ if Config.diff:
     else:
         path = ("%s~1" % path[0], path[1])
 
-    revs = git(["rev-list", "--reverse", "--first-parent", "--date-order", path[1], "^%s" % path[0]])
+    revs = git(["rev-list", "--reverse", "--date-order", path[1], "^%s" % path[0]])
+
     diffPath("<manual-diff>", revs)
 
     sys.exit(0)
@@ -514,7 +515,8 @@ if report:
         old_rev = cache.heads[head]
         new_rev = current.heads[head]
 
-        revs = git(["rev-list", "--reverse", "--first-parent", "--date-order", new_rev, "^%s~1" % old_rev])
+        revs = git(["rev-list", "--reverse", "--date-order", new_rev, "^%s~1" % old_rev])
+        print >>sys.stderr, "XX", revs
         diffPath(head, revs)
 
     # Check for unreported commits.

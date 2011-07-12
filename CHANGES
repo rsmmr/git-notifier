@@ -1,3 +1,8 @@
+0.3-1 | 2011-07-12 14:35:53 -0700
+
+  * Fixing a problem with diffing potentially skipping revisions when
+    facing merges. (Robin Sommer)
+
 0.3 | 2011-05-08 21:33:08 -0700
 
   * Significant speed improvement: we now query git for the branches
