@@ -516,7 +516,6 @@ if report:
         new_rev = current.heads[head]
 
         revs = git(["rev-list", "--reverse", "--date-order", new_rev, "^%s~1" % old_rev])
-        print >>sys.stderr, "XX", revs
         diffPath(head, revs)
 
     # Check for unreported commits.

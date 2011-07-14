@@ -1,3 +1,7 @@
+0.3-2 | 2011-07-14 11:17:44 -0700
+
+  * Removing debugging output. (Robin Sommer)
+
 0.3-1 | 2011-07-12 14:35:53 -0700
 
   * Fixing a problem with diffing potentially skipping revisions when
