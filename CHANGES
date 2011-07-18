@@ -1,3 +1,9 @@
+0.3-3 | 2011-07-17 22:15:14 -0700
+
+  * For heads that get full diffs, we now record which diffs we have
+    already mailed out. This avoid duplicates when stuff is merged into
+    something else later. (Robin Sommer)
+
 0.3-2 | 2011-07-14 11:17:44 -0700
 
   * Removing debugging output. (Robin Sommer)

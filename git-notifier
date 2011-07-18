@@ -399,6 +399,12 @@ def commit(current, rev):
 
 # Sends a diff between two revisions.
 def diff(head, first, last):
+    # We record a pseudo-revision to avoid sending the same diff twice.
+    rev = "diff-%s-%s" % (head, last)
+    if not rev in current.reported:
+        log("New diff revision %s" % rev)
+        current.reported.add(rev)
+
     log("Diffing %s..%s" % (first, last))
 
     subject = git("show '--pretty=format:%%s (%%h)' -s %s" % last)
@@ -411,7 +417,8 @@ def diff(head, first, last):
 
     sendChangeMail(subject, heads, show_cmd, diff_cmd)
 
-# Sends pair-wise diffs for a path of revisions.
+# Sends pair-wise diffs for a path of revisions. Also records all revision on
+# the path as seen.
 def diffPath(head, revs):
     last = None
 
