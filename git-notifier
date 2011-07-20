@@ -47,6 +47,7 @@ class State:
         self.heads = {}
         self.tags = {}
         self.revs = set()
+        self.diffs = set()
 
         self.reported = set() # Revs reported this run so far.
 
@@ -67,6 +68,9 @@ class State:
 
         for rev in self.revs:
             print >>out, "rev", rev
+
+        for rev in self.diffs:
+            print >>out, "diff", rev
 
     def readFrom(self, file):
         self.clear()
@@ -93,6 +97,9 @@ class State:
 
             elif type == "rev":
                 self.revs.add(key)
+
+            elif type == "diffs":
+                self.diffs.add(key)
 
             else:
                 error("unknown type %s in cache file" % type)
@@ -400,10 +407,10 @@ def commit(current, rev):
 # Sends a diff between two revisions.
 def diff(head, first, last):
     # We record a pseudo-revision to avoid sending the same diff twice.
-    rev = "diff-%s-%s" % (head, last)
-    if not rev in current.reported:
+    rev = "%s-%s" % (head, last)
+    if not rev in current.diffs:
         log("New diff revision %s" % rev)
-        current.reported.add(rev)
+        current.diffs.add(rev)
 
     log("Diffing %s..%s" % (first, last))
 

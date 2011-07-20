@@ -1,3 +1,8 @@
+0.3-4 | 2011-07-19 19:19:46 -0700
+
+  * Fixing the 0.3-3 change for diffs, which didn't work right. (Robin
+    Sommer)
+
 0.3-3 | 2011-07-17 22:15:14 -0700
 
   * For heads that get full diffs, we now record which diffs we have
