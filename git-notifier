@@ -69,8 +69,10 @@ class State:
         for rev in self.revs:
             print >>out, "rev", rev
 
-        for rev in self.diffs:
-            print >>out, "diff", rev
+        # No longer used.
+        #
+        # for rev in self.diffs:
+        #     print >>out, "diff", rev
 
     def readFrom(self, file):
         self.clear()
@@ -98,7 +100,7 @@ class State:
             elif type == "rev":
                 self.revs.add(key)
 
-            elif type == "diffs":
+            elif type == "diff":
                 self.diffs.add(key)
 
             else:
@@ -382,19 +384,16 @@ def sendChangeMail(subject, heads, show_cmd, diff_cmd):
     sendMail(out, fname)
 
 # Sends notification for a specific revision.
-def commit(current, rev):
-    if rev in current.reported:
+def commit(current, rev, force=False):
+    if rev in current.reported and not force:
         # Already reported in this run of the script.
-        log("New revision %s, but already reported this time" % rev)
+        log("Flagged revision %s for notification, but already reported this time" % rev)
+        return
 
     log("New revision %s" % rev)
     current.reported.add(rev)
 
     heads = [head.split()[-1] for head in git("branch --contains=%s" % rev)]
-
-    if len(set(heads) - Config.allchanges) == 0:
-        # We have reported full diffs for all already.
-        return
 
     subject = git("show '--pretty=format:%%s (%%h)' -s %s" % rev)
     subject = "%s: %s" % (",".join(heads), subject[0])
@@ -405,6 +404,8 @@ def commit(current, rev):
     sendChangeMail(subject, heads, show_cmd, diff_cmd)
 
 # Sends a diff between two revisions.
+#
+# Only used in manual mode now.
 def diff(head, first, last):
     # We record a pseudo-revision to avoid sending the same diff twice.
     rev = "%s-%s" % (head, last)
@@ -426,6 +427,8 @@ def diff(head, first, last):
 
 # Sends pair-wise diffs for a path of revisions. Also records all revision on
 # the path as seen.
+#
+# Only used in manual mode now.
 def diffPath(head, revs):
     last = None
 
@@ -434,11 +437,15 @@ def diffPath(head, revs):
             diff(head, last, rev)
         last = rev
 
-# Sends a commit notifications for a set of revisions, independent of whether
-# they already have been reported.
-def reportPath(current, revs):
-    for rev in revs:
-        commit(current, rev)
+# Sends a commit notifications for a set of revisions.
+def reportPath(current, revs, force=False):
+    # Sort updates by time.
+    def _key(rev):
+        ts = git("show -s '--pretty=format:%%ct' %s" % rev)
+        return int(ts[0])
+
+    for rev in sorted(revs, key=_key):
+        commit(current, rev, force)
 
 # Sends a summary mail for a set of revisions.
 def headMoved(head, path):
@@ -496,7 +503,7 @@ if Config.manual:
         path = ("%s~1" % path[0], path[0])
 
     revs = git(["rev-list", "--reverse", "--date-order", path[1], "^%s" % path[0]])
-    reportPath(current, revs)
+    reportPath(current, revs, force=True)
 
     sys.exit(0)
 
@@ -524,43 +531,26 @@ if report:
     for tag in (old - new):
         entryDeleted("tag", tag)
 
-    # Do complete reports for the heads we want to see everything for.
-    for head in Config.allchanges:
-        old_rev = cache.heads[head]
-        new_rev = current.heads[head]
-
-        revs = git(["rev-list", "--reverse", "--date-order", new_rev, "^%s~1" % old_rev])
-        diffPath(head, revs)
-
-    # Check for unreported commits.
-
-        # Sort updates by time.
-    def _key(rev):
-        ts = git("show -s '--pretty=format:%%ct' %s" % rev)
-        return int(ts[0])
-
+    # Notify for unreported commits.
     old = set(cache.revs)
     new = set(current.revs)
+    new_revs = (new - old)
+    reportPath(current, new_revs)
 
-    new_revs = new - old
-
-    for rev in sorted(new_revs, key=_key):
-        commit(current, rev)
-
-    # See if heads have moved to include already reported revisions.
+    # Do reports for the heads we want to see everything for.
     for head in stable_heads:
-
-        if head in Config.allchanges:
-            # Already done complete diffs.
-            continue
-
         old_rev = cache.heads[head]
         new_rev = current.heads[head]
-
         path = git(["rev-list", "--reverse", "--date-order", new_rev, "^%s" % old_rev])
 
-        if len(set(path) - new_revs):
-            headMoved(head, path)
+        if head in Config.allchanges:
+            # Want to see all commits for this head, even if already reported
+            # in the past for some other. So we record these separately.
+            reportPath(current, path)
+        else:
+            # Just send a summary for heads that now include some new stuff.
+            if len(set(path) - new_revs):
+                headMoved(head, path)
 
 if not Config.noupdate:
     current.writeTo(CacheFile)

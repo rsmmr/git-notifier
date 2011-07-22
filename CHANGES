@@ -1,3 +1,10 @@
+0.3-5 | 2011-07-22 15:59:12 -0700
+
+  * Further tweaking allchanges. We now don't do real diffs anymore at
+    all, that's just not reliable. Instead, we simply always report
+    new revisions for allchanges heads no matter if they have already
+    been reported. 
+
 0.3-4 | 2011-07-19 19:19:46 -0700
 
   * Fixing the 0.3-3 change for diffs, which didn't work right. (Robin
