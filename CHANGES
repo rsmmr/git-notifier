@@ -1,3 +1,13 @@
+0.3-6 | 2011-07-24 15:52:44 -0700
+    
+   * Using diff-tree instead of diff as it allows us to give just a
+     single revision. (Robin Sommer)
+    
+   * With --allchanges, a revision previously reported in a branch and
+     now for one of the --allchanges heads, will have only the latter
+     in the mail subject. (Robin Sommer)
+
+
 0.3-5 | 2011-07-22 15:59:12 -0700
 
   * Further tweaking allchanges. We now don't do real diffs anymore at

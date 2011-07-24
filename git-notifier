@@ -384,7 +384,7 @@ def sendChangeMail(subject, heads, show_cmd, diff_cmd):
     sendMail(out, fname)
 
 # Sends notification for a specific revision.
-def commit(current, rev, force=False):
+def commit(current, rev, force=False, subject_head=None):
     if rev in current.reported and not force:
         # Already reported in this run of the script.
         log("Flagged revision %s for notification, but already reported this time" % rev)
@@ -394,12 +394,14 @@ def commit(current, rev, force=False):
     current.reported.add(rev)
 
     heads = [head.split()[-1] for head in git("branch --contains=%s" % rev)]
+    if not subject_head:
+        subject_head = ",".join(heads)
 
     subject = git("show '--pretty=format:%%s (%%h)' -s %s" % rev)
-    subject = "%s: %s" % (",".join(heads), subject[0])
+    subject = "%s: %s" % (subject_head, subject[0])
 
     show_cmd = "show -s --no-color --find-copies-harder --pretty=medium %s" % rev
-    diff_cmd = "diff --patch-with-stat --no-color --find-copies-harder --ignore-space-at-eol ^%s~1 %s " % (rev, rev)
+    diff_cmd = "diff-tree --patch-with-stat --no-color --find-copies-harder --ignore-space-at-eol %s" % rev
 
     sendChangeMail(subject, heads, show_cmd, diff_cmd)
 
@@ -438,14 +440,14 @@ def diffPath(head, revs):
         last = rev
 
 # Sends a commit notifications for a set of revisions.
-def reportPath(current, revs, force=False):
+def reportPath(current, revs, force=False, subject_head=None):
     # Sort updates by time.
     def _key(rev):
         ts = git("show -s '--pretty=format:%%ct' %s" % rev)
         return int(ts[0])
 
     for rev in sorted(revs, key=_key):
-        commit(current, rev, force)
+        commit(current, rev, force=force, subject_head=subject_head)
 
 # Sends a summary mail for a set of revisions.
 def headMoved(head, path):
@@ -546,7 +548,7 @@ if report:
         if head in Config.allchanges:
             # Want to see all commits for this head, even if already reported
             # in the past for some other. So we record these separately.
-            reportPath(current, path)
+            reportPath(current, path, subject_head=head)
         else:
             # Just send a summary for heads that now include some new stuff.
             if len(set(path) - new_revs):
