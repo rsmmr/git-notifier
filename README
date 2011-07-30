@@ -1,9 +1,9 @@
-..	-*- mode: rst -*-
-
-.. include:: version.rst
+.. -*- mode: rst -*-
 
 .. |date| date::
 
+.. Version number is filled in automatically.
+.. |version| replace:: "0.3-7"
 
 git-notifier
 ============
@@ -203,6 +203,9 @@ address, do ``git config hooks.mailinglist git-updates@foo.com``:
         Does not update the internal state file, meaning that any
         updates will be reported *again* next time the script is
         run.
+
+    ``--replyto <email>``
+        Adds a ``Reply-To: <email>`` header to outgoing mails.
 
     ``--sender <address>``
         Defines the sender address for all generated mails. Default

@@ -1,11 +1,17 @@
+
+0.3-7 | 2011-07-30 10:33:30 -0700
+
+  * New option --replyto to set a Reply-To header for mails. (Robin
+    Sommer)
+
 0.3-6 | 2011-07-24 15:52:44 -0700
-    
-   * Using diff-tree instead of diff as it allows us to give just a
-     single revision. (Robin Sommer)
-    
-   * With --allchanges, a revision previously reported in a branch and
-     now for one of the --allchanges heads, will have only the latter
-     in the mail subject. (Robin Sommer)
+
+  * Using diff-tree instead of diff as it allows us to give just a
+    single revision. (Robin Sommer)
+
+  * With --allchanges, a revision previously reported in a branch and
+    now for one of the --allchanges heads, will have only the latter
+    in the mail subject. (Robin Sommer)
 
 
 0.3-5 | 2011-07-22 15:59:12 -0700
@@ -13,7 +19,7 @@
   * Further tweaking allchanges. We now don't do real diffs anymore at
     all, that's just not reliable. Instead, we simply always report
     new revisions for allchanges heads no matter if they have already
-    been reported. 
+    been reported.
 
 0.3-4 | 2011-07-19 19:19:46 -0700
 
@@ -42,31 +48,31 @@
     ourselves. Based on a suggestion by Simon Marlow.
 
   * Adding git repository to README.
-    
+
   * Compatibility fix to support older git versions. (Simon Marlow)
-    
+
   * New option 'link' to define a URL that will be inserted into
     notification mails.
-    
+
   * New option 'repouri' to overide the automatically derived
     repository location.
-    
+
   * All options can now indeed be given via git-config (as the README
     already claims), and they are now all located in the hooks.*
     namespace.
-    
+
   * Integer options are now correctly converted to ints when read from
     git-config.
-    
+
   * Internal rewrite of how options are implemented.
 
   * Removing the update-changes script from the repository.
-    
+
   * Now using gitolite's GL_ADMINDIR environment variable to locate
     the default sender.cfg.
 
   * We now keep the previous state file as *.bak.
-    
+
   * Fixing a bug with revisions not being part of any head.
 
   * Now hooks.allchanges can be specified via "git config".

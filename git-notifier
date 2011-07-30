@@ -9,8 +9,9 @@ import subprocess
 import tempfile
 import time
 
+VERSION   = "0.3-7"  # Filled in automatically.
+
 Name      = "git-notifier"
-Version   = "0.3"
 CacheFile = ".%s.dat" % Name
 Separator = "\n>---------------------------------------------------------------\n"
 NoDiff    = "[nodiff]"
@@ -37,6 +38,7 @@ Options = [
     ("link", True, None, "Link to insert into mail, %s will be replaced with revision"),
     ("updateonly", False, False, "update state file only, no mails"),
     ("users", True, None, "location of a user-to-email mapping file"),
+    ("replyto", True, None, "email address for reply-to header"),
     ]
 
 class State:
@@ -272,15 +274,19 @@ def generateMailHeader(subject):
             repo = repo[0:-4]
 
     (out, fname) = makeTmp()
+
+    replyto = "Reply-To: %s" % Config.replyto if Config.replyto else ""
+
     print >>out, """From: %s
 To: %s
 Subject: %s %s
+%s
 X-Git-Repository: %s
 X-Mailer: %s %s
 
 %s
 
-""" % (Config.sender, Config.mailinglist, Config.emailprefix, subject, repo,
+""" % (Config.sender, Config.mailinglist, Config.emailprefix, subject, replyto, repo,
        Name, Version, mailTag("Repository", repo)),
 
     return (out, fname)
