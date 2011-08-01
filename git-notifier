@@ -331,7 +331,7 @@ def entryDeleted(key, value):
 
 # Sends a mail for a notification consistent of two parts: (1) the output of a
 # show command, and (2) the output of a diff command.
-def sendChangeMail(subject, heads, show_cmd, diff_cmd):
+def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd):
 
     (out, fname) = generateMailHeader(subject)
 
@@ -409,7 +409,7 @@ def commit(current, rev, force=False, subject_head=None):
     show_cmd = "show -s --no-color --find-copies-harder --pretty=medium %s" % rev
     diff_cmd = "diff-tree --patch-with-stat --no-color --find-copies-harder --ignore-space-at-eol %s" % rev
 
-    sendChangeMail(subject, heads, show_cmd, diff_cmd)
+    sendChangeMail(rev, subject, heads, show_cmd, diff_cmd)
 
 # Sends a diff between two revisions.
 #
@@ -431,7 +431,7 @@ def diff(head, first, last):
     show_cmd = "show -s --no-color --find-copies-harder --pretty=medium %s" % last
     diff_cmd = "diff --patch-with-stat -m --no-color --find-copies-harder --ignore-space-at-eol %s %s" % (first, last)
 
-    sendChangeMail(subject, heads, show_cmd, diff_cmd)
+    sendChangeMail(last, subject, heads, show_cmd, diff_cmd)
 
 # Sends pair-wise diffs for a path of revisions. Also records all revision on
 # the path as seen.
