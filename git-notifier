@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 import time
 
-VERSION   = "0.3-7"  # Filled in automatically.
+VERSION   = "0.3-12"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
@@ -341,7 +341,6 @@ def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd):
 
     if Config.link:
         url = Config.link.replace("%s", rev)
-        print >>out, ""
         print >>out, mailTag("Link", url)
 
     footer = ""
@@ -548,7 +547,7 @@ if report:
     for head in stable_heads:
         old_rev = cache.heads[head]
         new_rev = current.heads[head]
-        path = git(["rev-list", "--reverse", "--date-order", new_rev, "^%s" % old_rev])
+        path = git(["rev-list", "--date-order", new_rev, "^%s" % old_rev])
 
         if head in Config.allchanges:
             # Want to see all commits for this head, even if already reported
