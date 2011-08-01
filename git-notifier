@@ -275,13 +275,12 @@ def generateMailHeader(subject):
 
     (out, fname) = makeTmp()
 
-    replyto = "Reply-To: %s" % Config.replyto if Config.replyto else ""
+    replyto = "Reply-To: %s\n" % Config.replyto if Config.replyto else ""
 
     print >>out, """From: %s
 To: %s
 Subject: %s %s
-%s
-X-Git-Repository: %s
+%sX-Git-Repository: %s
 X-Mailer: %s %s
 
 %s
