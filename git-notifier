@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 import time
 
-VERSION   = "0.3-12"  # Filled in automatically.
+VERSION   = "0.3-13"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
@@ -445,12 +445,13 @@ def diffPath(head, revs):
 
 # Sends a commit notifications for a set of revisions.
 def reportPath(current, revs, force=False, subject_head=None):
-    # Sort updates by time.
-    def _key(rev):
-        ts = git("show -s '--pretty=format:%%ct' %s" % rev)
-        return int(ts[0])
+    if not revs:
+        return
 
-    for rev in sorted(revs, key=_key):
+    # Sort updates by time.
+    revs = git("rev-list --no-walk --reverse --date-order %s" % " ".join(revs))
+
+    for rev in revs:
         commit(current, rev, force=force, subject_head=subject_head)
 
 # Sends a summary mail for a set of revisions.
@@ -496,7 +497,7 @@ if Config.diff:
     else:
         path = ("%s~1" % path[0], path[1])
 
-    revs = git(["rev-list", "--reverse", "--date-order", path[1], "^%s" % path[0]])
+    revs = git(["rev-list", "--reverse --date-order", path[1], "^%s" % path[0]])
 
     diffPath("<manual-diff>", revs)
 
@@ -508,7 +509,7 @@ if Config.manual:
     if len(path) == 1:
         path = ("%s~1" % path[0], path[0])
 
-    revs = git(["rev-list", "--reverse", "--date-order", path[1], "^%s" % path[0]])
+    revs = git(["rev-list", "--reverse --date-order", path[1], "^%s" % path[0]])
     reportPath(current, revs, force=True)
 
     sys.exit(0)
@@ -547,7 +548,7 @@ if report:
     for head in stable_heads:
         old_rev = cache.heads[head]
         new_rev = current.heads[head]
-        path = git(["rev-list", "--date-order", new_rev, "^%s" % old_rev])
+        path = git(["rev-list", "--reverse --date-order", new_rev, "^%s" % old_rev])
 
         if head in Config.allchanges:
             # Want to see all commits for this head, even if already reported
