@@ -1,4 +1,8 @@
 
+0.3-13 | 2011-08-11 10:15:56 -0700
+
+  * Mails are now sent out in chronological order. (Robin Sommer)
+
 0.3-12 | 2011-07-31 21:45:00 -0700
 
   * A number of bug fixes.  (Robin Sommer)
