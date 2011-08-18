@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 import time
 
-VERSION   = "0.3-15"  # Filled in automatically.
+VERSION   = "0.3-16"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
@@ -401,11 +401,17 @@ def commit(current, rev, force=False, subject_head=None):
     if not subject_head:
         subject_head = ",".join(heads)
 
+    merge_diff = "--cc"
+
+    for head in heads:
+        if head in head in Config.allchanges:
+            merge_diff = "-m"
+
     subject = git("show '--pretty=format:%%s (%%h)' -s %s" % rev)
     subject = "%s: %s" % (subject_head, subject[0])
 
     show_cmd = "show -s --no-color --find-copies-harder --pretty=medium %s" % rev
-    diff_cmd = "diff-tree --patch-with-stat --no-color --find-copies-harder --ignore-space-at-eol %s" % rev
+    diff_cmd = "diff-tree --patch-with-stat --no-color --find-copies-harder --ignore-space-at-eol %s %s" % (merge_diff, rev)
 
     sendChangeMail(rev, subject, heads, show_cmd, diff_cmd)
 

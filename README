@@ -127,12 +127,14 @@ giving them on the command line, all of them can alse be set via
 address, do ``git config hooks.mailinglist git-updates@foo.com``:
 
     ``--allchanges <branches>``
-        Lists branches for which *all* changes made to them should
-        be mailed out as straight diffs to their previous state,
+
+        Lists branches for which *all* changes made to them should be
+        mailed out as straight diffs to their previous state,
         independent of whether the corresponding commit has already
-        been reported in the past. This might for example make sense
-        for ``master`` if one wants to closely track any
-        modification applied. ``<branches>`` is a list of
+        been reported in the past. For merge commits, the mails
+        include the full diff (i.e., git's ``diff -m``). This might
+        for example make sense for ``master`` if one wants to closely
+        track any modification applied. ``<branches>`` is a list of
         command-separated names of heads to treat this way.
 
     ``--debug``
