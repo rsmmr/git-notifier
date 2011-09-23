@@ -1,4 +1,8 @@
 
+0.3-16 | 2011-08-18 10:31:05 -0700
+
+  * Now showing diffs for merges as well. (Robin Sommer)
+
 0.3-15 | 2011-08-12 09:07:27 -0700
 
   * Updating CHANGES. (Robin Sommer)

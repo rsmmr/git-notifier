@@ -39,6 +39,7 @@ Options = [
     ("updateonly", False, False, "update state file only, no mails"),
     ("users", True, None, "location of a user-to-email mapping file"),
     ("replyto", True, None, "email address for reply-to header"),
+    ("mergediffs", True, set(), "branches for which complete merge diffs are to be included"),
     ]
 
 class State:
@@ -115,6 +116,9 @@ class GitConfig:
 
         if self.allchanges and not isinstance(self.allchanges, set):
             self.allchanges = set([head.strip() for head in self.allchanges.split(",")])
+
+        if self.mergediffs and not isinstance(self.mergediffs, set):
+            self.mergediffs = set([head.strip() for head in self.mergediffs.split(",")])
 
         if not self.debug:
             self.log = open(self.log, "a")
@@ -404,7 +408,7 @@ def commit(current, rev, force=False, subject_head=None):
     merge_diff = "--cc"
 
     for head in heads:
-        if head in head in Config.allchanges:
+        if head in Config.allchanges or head in Config.mergediffs:
             merge_diff = "-m"
 
     subject = git("show '--pretty=format:%%s (%%h)' -s %s" % rev)

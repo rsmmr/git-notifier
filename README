@@ -194,6 +194,12 @@ address, do ``git config hooks.mailinglist git-updates@foo.com``:
         (re-)generation of this output, and does not change the
         current notifier state in any way.
 
+    ``--mergediffs <branches>``
+        Lists branches for which merges should include the full diff,
+        including all changes that are already part of branch commits.
+        ``<branches>`` is a list of command-separated names of heads
+        to treat this way.
+
     ``--maxdiffsize <size in KB>``
         Limits the size of mails by giving a maximum number of bytes
         that a diff may have. If the diff for a change is larger
