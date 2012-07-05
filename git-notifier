@@ -334,7 +334,7 @@ def entryDeleted(key, value):
 
 # Sends a mail for a notification consistent of two parts: (1) the output of a
 # show command, and (2) the output of a diff command.
-def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd):
+def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd, stat_cmd):
 
     (out, fname) = generateMailHeader(subject)
 
@@ -365,8 +365,10 @@ def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd):
         size = os.path.getsize(tname)
 
         if size > Config.maxdiffsize:
+            (tmp, tname) = makeTmp()
+            diff = git(stat_cmd, stdout_to=tmp)
+            tmp.close()
             footer = "\nDiff suppressed because of size. To see it, use:\n\n    git %s" % diff_cmd
-            tname = None
 
     print >>out, Separator
 
@@ -388,6 +390,7 @@ def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd):
         print >>out, "-- "
         print >>out, "debug: show_cmd = git %s" % show_cmd
         print >>out, "debug: diff_cmd = git %s" % diff_cmd
+        print >>out, "debug: stat_cmd = git %s" % stat_cmd
 
     sendMail(out, fname)
 
@@ -416,8 +419,9 @@ def commit(current, rev, force=False, subject_head=None):
 
     show_cmd = "show -s --no-color --find-copies-harder --pretty=medium %s" % rev
     diff_cmd = "diff-tree --patch-with-stat --no-color --find-copies-harder --ignore-space-at-eol %s %s" % (merge_diff, rev)
+    stat_cmd = "diff --stat --no-color --find-copies-harder --ignore-space-at-eol ^%s~1 %s " % (rev, rev)
 
-    sendChangeMail(rev, subject, heads, show_cmd, diff_cmd)
+    sendChangeMail(rev, subject, heads, show_cmd, diff_cmd, stat_cmd)
 
 # Sends a diff between two revisions.
 #
@@ -438,8 +442,9 @@ def diff(head, first, last):
 
     show_cmd = "show -s --no-color --find-copies-harder --pretty=medium %s" % last
     diff_cmd = "diff --patch-with-stat -m --no-color --find-copies-harder --ignore-space-at-eol %s %s" % (first, last)
+    stat_cmd = "diff --stat -m --no-color --find-copies-harder --ignore-space-at-eol %s %s" % (first, last)
 
-    sendChangeMail(last, subject, heads, show_cmd, diff_cmd)
+    sendChangeMail(last, subject, heads, show_cmd, diff_cmd, stat_cmd)
 
 # Sends pair-wise diffs for a path of revisions. Also records all revision on
 # the path as seen.
