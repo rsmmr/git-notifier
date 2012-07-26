@@ -1,4 +1,10 @@
 
+0.3-21 | 2012-10-25 14:59:51 -0700
+
+  * Fix "1st commit" issue in automatic mode. (Jan Pokorný)
+
+  * Fix typo/formatting. (Jan Pokorný)
+
 0.3-19 | 2012-09-26 07:50:08 -0700
 
   * The URL given for the --link option can now contain an "%r"
