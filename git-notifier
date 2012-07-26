@@ -30,7 +30,7 @@ Options = [
     ("hostname", True, socket.gethostname(), "host where the repository is hosted"),
     ("log", True, "%s.log" % Name, "set log output"),
     ("mailinglist", True, whoami, "destination address for mails"),
-    ("manual", True, None, "notifiy for a manually given set of revisions"),
+    ("manual", True, None, "notify for a manually given set of revisions"),
     ("maxdiffsize", True, 50, "limit the size of diffs in mails (KB)"),
     ("noupdate", False, False, "do not update the state file"),
     ("repouri", True, None, "full URI for the repository"),
@@ -228,7 +228,7 @@ def getTags(state):
 
         if type == "tag":
             if tag.startswith("refs/tags/"):
-                tag= tag[10:]
+                tag = tag[10:]
 
             state.tags[tag] = rev
 
