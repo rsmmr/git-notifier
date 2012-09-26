@@ -345,6 +345,7 @@ def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd, stat_cmd):
 
     if Config.link:
         url = Config.link.replace("%s", rev)
+        url = url.replace("%r", os.path.basename(os.getcwd()))
         print >>out, mailTag("Link", url)
 
     footer = ""

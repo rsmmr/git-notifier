@@ -175,7 +175,8 @@ address, do ``git config hooks.mailinglist git-updates@foo.com``:
         Specifies a URL that will be included into notification mails
         for locating a changeset online. The URL can contain a "%s"
         placeholder that will be replaced with the corresponding git
-        revision number.
+        revision number. The URL can also contain an "%r" placeholder that
+        will be replaced with the name of the repository.
 
     ``--log <file>``
         Write logging information into the given file. Default is
