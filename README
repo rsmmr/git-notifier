@@ -3,7 +3,7 @@
 .. |date| date::
 
 .. Version number is filled in automatically.
-.. |version| replace:: "0.3-7"
+.. |version| replace:: 0.4
 
 git-notifier
 ============
@@ -85,8 +85,8 @@ mail will be send for that change.
 Download
 --------
 
-The current release is `git-notifier 0.3
-<http://www.icir.org/robin/git-notifier/git-notifier-0.3.tar.gz>`_ 
+The current release is `git-notifier 0.4
+<http://www.icir.org/robin/git-notifier/git-notifier-0.4.tar.gz>`_ 
 
 Not surprisingly, ``git-notifier`` is maintained in a git repository
 that you clone::
