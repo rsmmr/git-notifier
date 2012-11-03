@@ -4,6 +4,7 @@
 DISTFILES = git-notifier Makefile README COPYING CHANGES VERSION
 
 WWW = $(HOME)/www/git-notifier
+VERSION = `cat VERSION`
 
 all:
 
