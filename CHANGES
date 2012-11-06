@@ -1,4 +1,8 @@
 
+0.41-1 | 2012-11-06 08:36:12 -0800
+
+  * Removing check preventing mails on initialization. (Robin Sommer)
+
 0.41 | 2012-11-03 14:05:45 -0700
 
   * Version number tweaking. (Robin Sommer)

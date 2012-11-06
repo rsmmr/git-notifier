@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 import time
 
-VERSION   = "0.41"  # Filled in automatically.
+VERSION   = "0.41-1"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
@@ -500,8 +500,8 @@ if os.path.exists(CacheFile):
     cache.readFrom(CacheFile)
     report = (not Config.updateonly)
 else:
-    log("Initial run. Not generating any mails, just recording current state.")
-    report = False
+    log("Initial run.")
+    report = True
 
 current = getCurrent()
 
