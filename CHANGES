@@ -1,4 +1,8 @@
 
+0.41-2 | 2012-12-17 12:48:24 -0800
+
+  * --updateonly now also applies to initial run. (Matthias Vallentin)
+    
 0.41-1 | 2012-11-06 08:36:12 -0800
 
   * Removing check preventing mails on initialization. (Robin Sommer)
