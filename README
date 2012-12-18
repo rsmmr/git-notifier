@@ -3,7 +3,7 @@
 .. |date| date::
 
 .. Version number is filled in automatically.
-.. |version| replace:: 0.41-2
+.. |version| replace:: 0.41-3
 
 git-notifier
 ============
@@ -185,6 +185,9 @@ address, do ``git config hooks.mailinglist git-updates@foo.com``:
     ``--mailinglist <address>``
         Specifies the recipient for all generated mails. Default is
         mailing to the system account that is running the script.
+
+    ``--mailsubjectlen <max>`` Limits subjects of generated mails to
+        ``<max>`` characters. Default os no limit.
 
     ``--manual [rev1..]rev2``
         Mails out notifications for all revisions on the way from

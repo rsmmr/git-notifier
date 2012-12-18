@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 import time
 
-VERSION   = "0.41-2"  # Filled in automatically.
+VERSION   = "0.41-3"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
@@ -32,6 +32,7 @@ Options = [
     ("mailinglist", True, whoami, "destination address for mails"),
     ("manual", True, None, "notify for a manually given set of revisions"),
     ("maxdiffsize", True, 50, "limit the size of diffs in mails (KB)"),
+    ("mailsubjectlen", True, None, "limit the length of mail subjects (number of chars)"),
     ("noupdate", False, False, "do not update the state file"),
     ("repouri", True, None, "full URI for the repository"),
     ("sender", True, sender, "sender address for mails"),
@@ -262,6 +263,13 @@ def mailTag(key, value):
     return "%-11s: %s" % (key, value)
 
 def generateMailHeader(subject):
+    if Config.mailsubjectlen:
+        try:
+            maxlen = int(Config.mailsubjectlen)
+            if len(subject) > maxlen:
+                subject = subject[:maxlen] + " ..."
+        except ValueError:
+            pass
 
     repo = Config.repouri
 
@@ -416,6 +424,7 @@ def commit(current, rev, force=False, subject_head=None):
             merge_diff = "-m"
 
     subject = git("show '--pretty=format:%%s (%%h)' -s %s" % rev)
+    
     subject = "%s: %s" % (subject_head, subject[0])
 
     show_cmd = "show -s --no-color --find-copies-harder --pretty=medium %s" % rev
