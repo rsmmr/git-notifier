@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 import time
 
-VERSION   = "0.41-3"  # Filled in automatically.
+VERSION   = "0.41-4"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
@@ -18,7 +18,12 @@ NoDiff    = "[nodiff]"
 NoMail    = "[nomail]"
 
 gitolite = "GL_USER" in os.environ
-whoami = os.environ["LOGNAME"]
+
+if "LOGNAME" in os.environ:
+    whoami = os.environ["LOGNAME"]
+else:
+    whoami = subprocess.Popen("whoami", stdout=subprocess.PIPE).communicate()[0].strip()
+
 sender = os.environ["GL_USER"] if gitolite else whoami
 
 Options = [

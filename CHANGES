@@ -1,4 +1,8 @@
 
+0.41-4 | 2013-02-17 15:17:23 -0800
+
+  * Falling back to `whoami` if LOGNAME not set. (Robin Sommer)
+
 0.41-3 | 2012-12-17 16:43:13 -0800
 
   * New option --mailsubjectlen to limit length of mail subjects.
