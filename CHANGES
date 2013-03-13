@@ -1,4 +1,9 @@
 
+0.41-5 | 2013-03-13 08:04:55 -0700
+
+  * Sustituting external "whoami" call with something nicer. (Robin
+    Sommer)
+
 0.41-4 | 2013-02-17 15:17:23 -0800
 
   * Falling back to `whoami` if LOGNAME not set. (Robin Sommer)

@@ -1,15 +1,16 @@
 #! /usr/bin/env python
 
+import getpass
 import optparse
 import os
 import shutil
 import socket
-import sys
 import subprocess
+import sys
 import tempfile
 import time
 
-VERSION   = "0.41-4"  # Filled in automatically.
+VERSION   = "0.41-5"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
@@ -22,7 +23,7 @@ gitolite = "GL_USER" in os.environ
 if "LOGNAME" in os.environ:
     whoami = os.environ["LOGNAME"]
 else:
-    whoami = subprocess.Popen("whoami", stdout=subprocess.PIPE).communicate()[0].strip()
+    whoami = getpass.getuser()
 
 sender = os.environ["GL_USER"] if gitolite else whoami
 

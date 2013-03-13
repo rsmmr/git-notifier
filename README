@@ -3,12 +3,12 @@
 .. |date| date::
 
 .. Version number is filled in automatically.
-.. |version| replace:: 0.41-4
+.. |version| replace:: 0.41-5
 
 git-notifier
 ============
 
-:Version: |version|
+:Version: |version| (git)
 :Home: http://www.icir.org/robin/git-notifier
 :Author: Robin Sommer <robin@icir.org>
 :Date: |date|
