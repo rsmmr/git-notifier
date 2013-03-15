@@ -10,7 +10,7 @@ import sys
 import tempfile
 import time
 
-VERSION   = "0.41-5"  # Filled in automatically.
+VERSION   = "0.41-6"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
@@ -502,7 +502,6 @@ def headMoved(head, path):
     sendMail(out, fname)
 
 Config = GitConfig(sys.argv[1:])
-report = (not Config.updateonly)
 
 log("Running for %s" % os.getcwd())
 
@@ -514,8 +513,11 @@ cache = State()
 
 if os.path.exists(CacheFile):
     cache.readFrom(CacheFile)
+    report = (not Config.updateonly)
+
 else:
-    log("Initial run.")
+    log("Initial run, no reporting of changes")
+    report = False
 
 current = getCurrent()
 

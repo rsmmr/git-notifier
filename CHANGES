@@ -1,4 +1,10 @@
 
+0.41-6 | 2013-03-15 08:00:11 -0700
+
+  * Switching back to old behaviour on first run (i.e., no mails). The
+    recent updates could easily trigger mail bombs on existing
+    repositories. (Robin Sommer)
+
 0.41-5 | 2013-03-13 08:04:55 -0700
 
   * Sustituting external "whoami" call with something nicer. (Robin
