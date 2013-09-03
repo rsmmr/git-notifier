@@ -1,0 +1,247 @@
+#! /usr/bin/env python
+
+import ConfigParser
+import optparse
+import time
+import os
+import shutil
+import subprocess
+import sys
+import github
+
+VERSION   = "0.1"  # Filled in automatically.
+
+Name       = "github-mirror"
+ConfigFile = "./%s.cfg" % Name
+LogFile    = "%s.log" % Name
+
+Config = None
+Options = None
+
+def log(msg):
+    assert Options
+    print >>Config.log, "%s - %s" % (time.asctime(), msg)
+
+def error(msg):
+    log("Error: %s" % msg)
+    sys.exit(1)
+
+def getOption(section, key, default):
+    try:
+        return Config.get(section, key)
+    except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        return default
+
+DirectoryStack = []
+
+def pushDirectory(dir):
+    DirectoryStack.append(os.getcwd())
+    os.chdir(dir)
+
+def popDirectory():
+    os.chdir(DirectoryStack.pop())
+
+def runCommand(args):
+    if isinstance(args, tuple) or isinstance(args, list):
+        args = " ".join(args)
+
+    if Options.debug:
+        print >>sys.stderr, "> " + args
+
+    return
+
+    try:
+        child = subprocess.Popen(args, shell=True, stdin=None, stdout=None, stderr=None)
+        (stdout, stderr) = child.communicate()
+    except OSError, e:
+        error("cannot run command '%s': %s" % (args, e))
+
+    if child.returncode != 0:
+        error("command failed with exit code %d" % child.returncode)
+
+def gitClone(repo):
+    assert not os.path.exists(repo.path)
+
+    log("creating %s" % repo)
+
+    try:
+        os.makedirs(repo.path)
+    except IOError, e:
+        error("cannot create %s: %s" % (repo.path, e))
+
+    # We don't actually clone here to avoid storing the token in git's
+    # configuration. Instead we just use fetch on update.
+    # See https://github.com/blog/1270-easier-builds-and-deployments-using-git-over-https-and-oauth
+
+def gitUpdate(repo):
+    log("updating %s" % repo)
+
+    pushDirectory(repo.path)
+    runCommand("git --bare init --quiet")
+    runCommand("git --bare fetch --quiet %s +refs/heads/*:refs/heads/*" % repo.url())
+    runCommand("git --bare fetch --quiet %s +refs/tags/*:refs/tags/*" % repo.url())
+    popDirectory()
+
+def runNotifier(repo):
+    log("running git-notifier for %s (well, not yet)" % repo)
+
+    pushDirectory(repo.path)
+    popDirectory()
+
+def gitRepositories(rset, org = None):
+    if rset.user and rset.token:
+        gh = github.Github(rset.user, rset.token)
+    else:
+        gh = github.Github()
+
+    return [Repository(rset, org, repo.name) for repo in gh.get_user(org).get_repos()]
+
+# Information about one repository.
+class Repository:
+    def __init__(self, rset, org, name):
+        if name.endswith(".git"):
+            name = name[:-4]
+
+        self.name = name
+        self.org = org
+        self.rset = rset
+        self.path = os.path.join(Options.base_directory, "%s-%s-%s" % (self.rset.name, self.org, self.name))
+        self.path = os.path.abspath(self.path)
+
+    def url(self):
+        if self.rset.token:
+            return "https://%s:x-oauth-basic@github.com/%s/%s.git" % (self.rset.token, self.org, self.name)
+        else:
+            return "https://github.com/%s/%s.git" % (self.org, self.name)
+
+    def printDebug(self):
+        print >>sys.stderr, "  %s/%s (path: %s)" % (self.org, self.name, self.path)
+
+    def update(self):
+        if not os.path.exists(self.path):
+            gitClone(self)
+
+        gitUpdate(self)
+        runNotifier(self)
+
+    def __str__(self):
+        return self.path
+
+    def __equal__(self, other):
+        return self.name == other.name and self.org == other.org
+
+# A RepositorySet corresponds to one section in the configuration file.
+class RepositorySet:
+    def __init__(self, section):
+        self.name = section
+        self.user = getOption(section, "user", None)
+        self.token = getOption(section, "token", None)
+
+        self.notifier_options = {}
+
+        for (key, value) in Config.items(section):
+            if key.startswith("notifier-"):
+                self.notifier_options[key[9:]] = value
+
+        repos = getOption(section, "repositories", "")
+
+        repos = [r.strip() for r in repos.split(",")]
+
+        all = {}
+        include = set()
+        exclude = set()
+
+        for r in repos:
+
+            if r.startswith("-"):
+                negate = True
+                r = r[1:]
+            else:
+                negate = False
+
+            m = r.split("/")
+
+            if len(m) == 1:
+                org = self.user
+                name = m[0]
+
+                if not self.user:
+                    error("no user or organisation given for repository '%s'" % name)
+
+            elif len(m) == 2:
+                org = m[0]
+                name = m[1]
+
+            else:
+                error("can't parse '%s'" % r)
+
+            if name == "*":
+                srepos = gitRepositories(self, org)
+            else:
+                srepos = [Repository(self, org, name)]
+
+            for repo in srepos:
+                all[str(repo)] = repo
+
+                if negate:
+                    exclude.add(str(repo))
+                else:
+                    include.add(str(repo))
+
+        self.repositories = [all[r] for r in (include - exclude)]
+
+    def update(self):
+        for rset in self.repositories:
+            rset.update()
+
+    def printDebug(self):
+        print >>sys.stderr, "Set:", self.name
+        print >>sys.stderr, "  User %s" % self.user
+        print >>sys.stderr, "  Token %s" % self.token
+
+        for (key, value) in self.notifier_options.items():
+            print >>sys.stderr, "  Notifier: %s=%s" % (key, value)
+
+        for r in self.repositories:
+            r.printDebug()
+
+# Main
+
+optparser = optparse.OptionParser(usage="%prog [options]", version=VERSION)
+optparser.add_option("-c", "--config", action="store", dest="config", default=ConfigFile,
+                     help="specify alternative configuration file to use")
+optparser.add_option("-d", "--debug", action="store_true", dest="debug", default=False,
+                     help="enable debug mode, logs to stderr")
+
+(Options, args) = optparser.parse_args()
+
+if len(args) > 1:
+    optparser.error("wrong number of arguments")
+
+if not os.path.exists(Options.config):
+    error("configuration file '%s' not found" % Options.config)
+
+Config = ConfigParser.ConfigParser()
+Config.read(Options.config)
+
+if Options.debug:
+    Config.log = sys.stderr
+else:
+    Config.log = open(LogFile, "a")
+
+(basedir, fname) = os.path.split(Options.config)
+
+Options.base_directory = basedir if basedir else os.getcwd()
+
+sets = []
+
+for section in Config.sections():
+    sets += [RepositorySet(section)]
+
+if Options.debug:
+    for rset in sets:
+        rset.printDebug()
+
+for rset in sets:
+    rset.update()
+

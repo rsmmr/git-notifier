@@ -10,7 +10,7 @@ import sys
 import tempfile
 import time
 
-VERSION   = "0.41-6"  # Filled in automatically.
+VERSION   = "0.42"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
@@ -240,7 +240,8 @@ def getTags(state):
             state.tags[tag] = rev
 
 def getReachableRefs(state):
-    for rev in git(["rev-list"] + state.heads.keys() + state.tags.keys()):
+    keys = ["'%s'" % k for k in state.heads.keys() + state.tags.keys()]
+    for rev in git(["rev-list"] + keys):
         state.revs.add(rev)
 
 def getCurrent():
