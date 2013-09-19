@@ -1,4 +1,12 @@
 
+0.42-3 | 2013-09-19 12:12:58 -0700
+
+  * Initial version of new github-notifier script.
+    
+    This scripts mirrors repositories from github locally and to then
+    run git-notifier on them. Still experimental, documentation
+    forthcoming. (Robin Sommer)
+
 0.42-2 | 2013-09-19 12:10:26 -0700
 
   * Emailprefix can now include %r to include repository name into
