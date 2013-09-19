@@ -10,7 +10,7 @@ import sys
 import tempfile
 import time
 
-VERSION   = "0.42"  # Filled in automatically.
+VERSION   = "0.42-2"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
@@ -32,7 +32,7 @@ Options = [
     ("allchanges", True, set(), "branches for which *all* changes are to be reported"),
     ("debug", False, False, "enable debug output"),
     ("diff", True, None, "mail out diffs between two revisions"),
-    ("emailprefix", True, "[git]", "Subject prefix for mails"),
+    ("emailprefix", True, "[git/%r]", "Subject prefix for mails"),
     ("hostname", True, socket.gethostname(), "host where the repository is hosted"),
     ("log", True, "%s.log" % Name, "set log output"),
     ("mailinglist", True, whoami, "destination address for mails"),
@@ -241,8 +241,10 @@ def getTags(state):
 
 def getReachableRefs(state):
     keys = ["'%s'" % k for k in state.heads.keys() + state.tags.keys()]
-    for rev in git(["rev-list"] + keys):
-        state.revs.add(rev)
+
+    if keys:
+        for rev in git(["rev-list"] + keys):
+            state.revs.add(rev)
 
 def getCurrent():
     state = State()
@@ -295,8 +297,11 @@ def generateMailHeader(subject, rev=None):
     (out, fname) = makeTmp()
 
     replyto = "Reply-To: %s\n" % Config.replyto if Config.replyto else ""
-
     sender = Config.sender
+
+    emailprefix = Config.emailprefix
+    repo_base = repo[repo.rfind("/") + 1:]
+    emailprefix = emailprefix.replace("%r", repo_base)
 
     if not sender:
         if rev:
@@ -312,7 +317,7 @@ X-Mailer: %s %s
 
 %s
 
-""" % (sender, Config.mailinglist, Config.emailprefix, subject, replyto, repo,
+""" % (sender, Config.mailinglist, emailprefix, subject, replyto, repo,
        Name, VERSION, mailTag("Repository", repo)),
 
     return (out, fname)
@@ -439,7 +444,7 @@ def commit(current, rev, force=False, subject_head=None):
             merge_diff = "-m"
 
     subject = git("show '--pretty=format:%%s (%%h)' -s %s" % rev)
-    
+
     subject = "%s: %s" % (subject_head, subject[0])
 
     show_cmd = "show -s --no-color --find-copies-harder --pretty=medium %s" % rev

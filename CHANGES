@@ -1,4 +1,16 @@
 
+0.42-2 | 2013-09-19 12:10:26 -0700
+
+  * Emailprefix can now include %r to include repository name into
+    subject. The default emailprefix is now "[git/%r]". (Robin Sommer)
+
+  * Bugfix for dealing with completely empty repositories. (Robin
+    Sommer)
+
+  * For mails with an associated revision, git-notifier now takes the
+    commiter's email address to send mails from there if nothing else
+    is specified. (Robin Sommer)
+
 0.42 | 2013-09-18 20:02:03 -0700
 
   * Fix to handle tags with non-standard characters. (Robin Sommer)

@@ -3,7 +3,7 @@
 .. |date| date::
 
 .. Version number is filled in automatically.
-.. |version| replace:: 0.42
+.. |version| replace:: 0.42-2
 
 git-notifier
 ============
@@ -162,9 +162,11 @@ address, do ``git config hooks.mailinglist git-updates@foo.com``:
         parent's path, and mails out actual diffs between these.
 
     ``--emailprefix``
-        Specifies a prefix for the mails' subject line. Default is
-        ``[git]``. Note that the name of this option is compatible
-        with some of other git notification scripts.
+        Specifies a prefix for the mails' subject line. If the prefix
+        contain an ``%r``, that will be replace with the repositories
+        name. Default is ``[git/%r]``. Note that the name of this
+        option is compatible with some of other git notification
+        scripts.
 
     ``--hostname <name>``
         Defines the hostname to use when building the repository
