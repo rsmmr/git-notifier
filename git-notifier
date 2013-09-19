@@ -25,7 +25,7 @@ if "LOGNAME" in os.environ:
 else:
     whoami = getpass.getuser()
 
-sender = os.environ["GL_USER"] if gitolite else whoami
+sender = os.environ["GL_USER"] if gitolite else None
 
 Options = [
     # Name, argument, default, help,
@@ -177,7 +177,7 @@ class GitConfig:
 
                 m = line.split()
 
-                if self.sender == m[0]:
+                if self.sender and self.sender == m[0]:
                     self.sender = " ".join(m[1:])
                     break
 
@@ -269,7 +269,7 @@ def deleteTmps():
 def mailTag(key, value):
     return "%-11s: %s" % (key, value)
 
-def generateMailHeader(subject):
+def generateMailHeader(subject, rev=None):
     if Config.mailsubjectlen:
         try:
             maxlen = int(Config.mailsubjectlen)
@@ -296,6 +296,14 @@ def generateMailHeader(subject):
 
     replyto = "Reply-To: %s\n" % Config.replyto if Config.replyto else ""
 
+    sender = Config.sender
+
+    if not sender:
+        if rev:
+            sender = "".join(git("show '--pretty=format:%%cn <%%ce>' -s %s" % rev))
+        else:
+            sender = whoami
+
     print >>out, """From: %s
 To: %s
 Subject: %s %s
@@ -304,7 +312,7 @@ X-Mailer: %s %s
 
 %s
 
-""" % (Config.sender, Config.mailinglist, Config.emailprefix, subject, replyto, repo,
+""" % (sender, Config.mailinglist, Config.emailprefix, subject, replyto, repo,
        Name, VERSION, mailTag("Repository", repo)),
 
     return (out, fname)
@@ -331,7 +339,7 @@ def sendMail(out, fname):
 def entryAdded(key, value, rev):
     log("New %s %s" % (key, value))
 
-    (out, fname) = generateMailHeader("%s '%s' created" % (key, value))
+    (out, fname) = generateMailHeader("%s '%s' created" % (key, value), rev)
 
     print >>out, mailTag("New %s" % key, value)
     print >>out, mailTag("Referencing", rev)
@@ -351,7 +359,7 @@ def entryDeleted(key, value):
 # show command, and (2) the output of a diff command.
 def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd, stat_cmd):
 
-    (out, fname) = generateMailHeader(subject)
+    (out, fname) = generateMailHeader(subject, rev)
 
     multi = "es" if len(heads) > 1 else ""
     heads = ",".join(heads)
