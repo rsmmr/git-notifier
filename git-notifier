@@ -10,7 +10,7 @@ import sys
 import tempfile
 import time
 
-VERSION   = "0.42-3"  # Filled in automatically.
+VERSION   = "0.42-4"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name

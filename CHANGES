@@ -1,10 +1,14 @@
 
+0.42-4 | 2013-09-25 22:15:07 -0700
+
+  * Updating README for github-notifier. (Robin Sommer)
+
 0.42-3 | 2013-09-19 12:12:58 -0700
 
   * Initial version of new github-notifier script.
     
-    This scripts mirrors repositories from github locally and to then
-    run git-notifier on them. Still experimental, documentation
+    This script mirrors repositories from GitHub locally to then run
+    git-notifier on them. Still experimental, documentation
     forthcoming. (Robin Sommer)
 
 0.42-2 | 2013-09-19 12:10:26 -0700

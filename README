@@ -3,7 +3,7 @@
 .. |date| date::
 
 .. Version number is filled in automatically.
-.. |version| replace:: 0.42-3
+.. |version| replace:: 0.42-4
 
 git-notifier
 ============
@@ -19,17 +19,21 @@ Introduction
 ------------
 
 ``git-notifier`` is a script to be used with `git
-<http://www.git.org>`_ as a `post-receive <XXX>`_ hook. Once
-installed, it emails out a summary of all changes each time a user
-pushes an update to the repository. Different from other similar
-scripts, ``git-notifier`` sends exactly one email per change, each
-of which includes a complete diff of all modifications as well as
-the set of branches from which the new revision can be reached. The
-scripts ensure that that each change is mailed out only exactly once
-by keeping a state file of already reported revisions. The script
-integrates nicely with `gitolite <https://github.com/sitaramc/gitolite>`_.
+<http://www.git.org>`_ as a *post-receive* hook. Once installed, it
+emails out a summary of all changes each time a user pushes an update
+to the repository. Different from other similar scripts,
+``git-notifier`` sends exactly one email per change, each of which
+includes a complete diff of all modifications as well as the set of
+branches from which the new revision can be reached. The scripts
+ensure that that each change is mailed out only exactly once by
+keeping a state file of already reported revisions.
 
-Here's example of such a ``git-notifier`` mail::
+``git-notifier`` integrates nicely with `gitolite
+<https://github.com/sitaramc/gitolite>`_, and it also comes with a
+companion script ``github-notifier`` that watches `GitHub
+<github.com>`_ repositories for changes.
+
+Here's example of a ``git-notifier`` mail::
 
     Subject: [git/git-notifier] master: Adding www target to Makefile. (7dc1f95)
 
@@ -86,7 +90,7 @@ Download
 --------
 
 The current release is `git-notifier 0.42
-<http://www.icir.org/robin/git-notifier/git-notifier-0.42.tar.gz>`_ 
+<http://www.icir.org/robin/git-notifier/git-notifier-0.42.tar.gz>`_
 
 Not surprisingly, ``git-notifier`` is maintained in a git repository
 that you clone::
@@ -94,7 +98,7 @@ that you clone::
     git clone git://git.icir.org/git-notifier
 
 You can also `browse the repository
-<http://git.icir.org/git-notifier.git>`_ 
+<http://git.icir.org/git-notifier.git>`_
 
 History
 -------
@@ -260,6 +264,97 @@ address, do ``git config hooks.mailinglist git-updates@foo.com``:
         words, you can check a file ``sender.cfg`` containing the
         mappings into gitolite's ``config/`` directory and it should
         Just Work.
+
+Monitoring GitHub
+-----------------
+
+.. note::
+
+    This is still experimental.
+
+The ``git-notifier`` distribution comes with a companion script,
+``github-notifier``, that watches GitHub repositories for changes. The
+script maintains a local mirror of repositories you want to watch and
+runs ``git-notifier`` locally on those to generate the notification
+mails.
+
+To setup ``github-notifier`` you create a configuration file
+``github-notifier.cfg`` in the directory where you want to keep the
+clones. ``github-notifier.cfg`` is an "ini-style" file consisting of
+one or more sections, each of which defines a set of repositories to
+monitor.
+
+Here's an example set that watches just a single repository at
+``github.com/bro/time-machine``::
+
+    [TimeMachine]
+    repositories=bro/time-machine
+    notifier-mailinglist=foo@bar.com
+
+This defines a set called ``TimeMachine`` consisting of just the one
+GitHub repository, sending notifications to the given email address.
+With this saved in the current directory as ``github-notifier.cfg``,
+you can then run ``github-notifier`` and it will create a complete
+clone of the remote on its first run (and not send any mails yet). On
+subsequent executions, the script will update the clone and spawn
+``git-notifier`` to email out notifications. For now, the best way to
+automate this is to run ``github-notifier`` from ``cron``.
+
+.. note::
+
+    In the future we might add a daemon mode to ``github-notifier``
+    that keeps it running in the background, polling for updates
+    regularly. Potentially it could even be triggered by a `GitHub web
+    hook <https://help.github.com/articles/post-receive-hooks>`_
+
+
+In the following we discuss more details of the configuration file.
+
+Specifying Repositories
+^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``repositories`` entry takes a list of command-separated
+repositories to monitor. Each repository has the form
+``<user>/<repo>``, where ``<user>`` is a GitHub user (or organization)
+and ``<repo>`` is a repository that the user (or organization)
+maintains. ``<repo>`` can be the wildcard ``*`` to monitor *all* of a
+user's repositories (e.g., ``repositories=bro/*``). One can exclude
+individual repositories by prefixing them with a dash (e.g.,
+``repositories=bro/*,-bro/time-machine``).
+
+Authentication
+^^^^^^^^^^^^^^
+
+By default, ``github-notifier`` only monitors public repositories. You
+can however also watch private ones if you provide it with suitable
+credentials using the ``user`` and ``token`` options::
+
+    user=foo
+    token=3238753465abc7634657zefg
+
+The ``token`` shouldn't be the user's password but a "personal access
+token" as you can generate it in the user's account settings.
+
+Setting Notifier Options
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Within a set one can specify any of the standard ``git-notifier``
+options by prefixing them with ``notifier-``. The
+``notifier-mailinglist`` options above is an example. To, e.g., set a
+Reply-To header, you would use ``notifier-replyto=somebody@else.net``.
+
+Usage
+^^^^^
+
+``github-notifier`` supports the following options:
+
+    ``--config <file>``
+        Specifies an alternative configuration file.
+
+    ``--debug``
+        Runs the script in debug mode, which means that it will (1)
+        log more verbosely and to stderr, and (2) run ``git-notifier``
+        with the ``--debug`` and ``--noupdate`` options.
 
 License
 -------
