@@ -3,7 +3,7 @@
 .. |date| date::
 
 .. Version number is filled in automatically.
-.. |version| replace:: 0.42-4
+.. |version| replace:: 0.5
 
 git-notifier
 ============
@@ -89,8 +89,8 @@ mail will be send for that change.
 Download
 --------
 
-The current release is `git-notifier 0.42
-<http://www.icir.org/robin/git-notifier/git-notifier-0.42.tar.gz>`_
+The current release is `git-notifier 0.5
+<http://www.icir.org/robin/git-notifier/git-notifier-0.5.tar.gz>`_
 
 Not surprisingly, ``git-notifier`` is maintained in a git repository
 that you clone::
@@ -131,7 +131,6 @@ giving them on the command line, all of them can alse be set via
 address, do ``git config hooks.mailinglist git-updates@foo.com``:
 
     ``--allchanges <branches>``
-
         Lists branches for which *all* changes made to them should be
         mailed out as straight diffs to their previous state,
         independent of whether the corresponding commit has already
@@ -176,6 +175,10 @@ address, do ``git config hooks.mailinglist git-updates@foo.com``:
         Defines the hostname to use when building the repository
         path shown in the notification mails. Default is the
         canonical name of the system the script is running on.
+
+    ``--ignoreremotes``
+        If given, ``git-notifier`` will not report any commits that
+        are already known by any configured remote repository. 
 
     ``--link <url>``
         Specifies a URL that will be included into notification mails
@@ -268,10 +271,6 @@ address, do ``git config hooks.mailinglist git-updates@foo.com``:
 Monitoring GitHub
 -----------------
 
-.. note::
-
-    This is still experimental.
-
 The ``git-notifier`` distribution comes with a companion script,
 ``github-notifier``, that watches GitHub repositories for changes. The
 script maintains a local mirror of repositories you want to watch and
@@ -300,13 +299,10 @@ subsequent executions, the script will update the clone and spawn
 ``git-notifier`` to email out notifications. For now, the best way to
 automate this is to run ``github-notifier`` from ``cron``.
 
-.. note::
-
-    In the future we might add a daemon mode to ``github-notifier``
-    that keeps it running in the background, polling for updates
-    regularly. Potentially it could even be triggered by a `GitHub web
-    hook <https://help.github.com/articles/post-receive-hooks>`_
-
+Note: In the future we might add a daemon mode to ``github-notifier``
+that keeps it running in the background, polling for updates
+regularly. Potentially it could even be triggered by a `GitHub web
+hook <https://help.github.com/articles/post-receive-hooks>`_
 
 In the following we discuss more details of the configuration file.
 

@@ -1,4 +1,16 @@
 
+0.5 | 2014-01-27 07:42:48 -0800
+
+  * New option to skip updates that a remote already knows.
+
+        ``--ignoreremotes``
+            If given, ``git-notifier`` will not report any commits tha
+            are already known by any configured remote repository.
+
+    In addition, github-notifier now also updates all remotes when it runs. (Robin Sommer)
+
+  * README updates. (Robin Sommer)
+
 0.42-4 | 2013-09-25 22:15:07 -0700
 
   * Updating README for github-notifier. (Robin Sommer)

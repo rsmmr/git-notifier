@@ -10,7 +10,7 @@ import sys
 import tempfile
 import time
 
-VERSION   = "0.42-4"  # Filled in automatically.
+VERSION   = "0.5"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
@@ -47,6 +47,7 @@ Options = [
     ("users", True, None, "location of a user-to-email mapping file"),
     ("replyto", True, None, "email address for reply-to header"),
     ("mergediffs", True, set(), "branches for which complete merge diffs are to be included"),
+    ("ignoreremotes", False, False, "don't report commits that a remote already knows"),
     ]
 
 class State:
@@ -429,6 +430,14 @@ def commit(current, rev, force=False, subject_head=None):
         # Already reported in this run of the script.
         log("Flagged revision %s for notification, but already reported this time" % rev)
         return
+
+    if Config.ignoreremotes:
+        branches = [line.split()[-1] for line in git("branch -a --contains=%s" % rev)]
+
+        for b in branches:
+            if b.startswith("remotes/"):
+                log("Flagged revision %s for notification, but already known by remote" % rev)
+                return
 
     log("New revision %s" % rev)
     current.reported.add(rev)
