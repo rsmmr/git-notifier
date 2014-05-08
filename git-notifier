@@ -365,6 +365,11 @@ def entryDeleted(key, value):
 # show command, and (2) the output of a diff command.
 def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd, stat_cmd):
 
+    if not heads:
+        # On no branch, probably some old commit that still
+        # gets referenced somehow. Skip.
+        return
+
     (out, fname) = generateMailHeader(subject, rev)
 
     multi = "es" if len(heads) > 1 else ""

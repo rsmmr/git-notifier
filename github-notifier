@@ -81,7 +81,7 @@ def gitUpdate(repo):
     runCommand("git --bare init --quiet")
     runCommand("git --bare fetch --quiet %s +refs/heads/*:refs/heads/*" % repo.url(True))
     runCommand("git --bare fetch --quiet %s +refs/tags/*:refs/tags/*" % repo.url(True))
-    runCommand("git remote update >/dev/null")
+    runCommand("git remote update >/dev/null 2>&1")
     popDirectory()
 
 def runNotifier(repo):
