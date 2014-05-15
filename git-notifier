@@ -9,8 +9,9 @@ import subprocess
 import sys
 import tempfile
 import time
+import email.header
 
-VERSION   = "0.5"  # Filled in automatically.
+VERSION   = "0.5-3"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
@@ -272,6 +273,14 @@ def deleteTmps():
 def mailTag(key, value):
     return "%-11s: %s" % (key, value)
 
+def encodeHeader(hdr):
+    try:
+        hdr.decode('ascii')
+    except UnicodeDecodeError:
+        return email.header.Header(hdr, "utf8")
+    else:
+        return hdr
+
 def generateMailHeader(subject, rev=None):
     if Config.mailsubjectlen:
         try:
@@ -297,7 +306,7 @@ def generateMailHeader(subject, rev=None):
 
     (out, fname) = makeTmp()
 
-    replyto = "Reply-To: %s\n" % Config.replyto if Config.replyto else ""
+    replyto = "Reply-To: %s\n" % encodeHeader(Config.replyto) if Config.replyto else ""
     sender = Config.sender
 
     emailprefix = Config.emailprefix
@@ -318,7 +327,9 @@ X-Mailer: %s %s
 
 %s
 
-""" % (sender, Config.mailinglist, emailprefix, subject, replyto, repo,
+""" % (encodeHeader(sender), encodeHeader(Config.mailinglist),
+       encodeHeader(emailprefix), encodeHeader(subject),
+       replyto, encodeHeader(repo),
        Name, VERSION, mailTag("Repository", repo)),
 
     return (out, fname)

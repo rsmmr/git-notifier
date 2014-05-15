@@ -1,4 +1,11 @@
 
+0.5-3 | 2014-05-14 20:10:47 -0700
+
+  * Encode mail headers according to RFC 2047. (Robin Sommer)
+    
+  * Don't send any emails for commits that aren't on any branch.
+    (Robin Sommer)
+
 0.5 | 2014-01-27 07:42:48 -0800
 
   * New option to skip updates that a remote already knows.
