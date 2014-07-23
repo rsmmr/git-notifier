@@ -138,7 +138,15 @@ address, do ``git config hooks.mailinglist git-updates@foo.com``:
         include the full diff (i.e., git's ``diff -m``). This might
         for example make sense for ``master`` if one wants to closely
         track any modification applied. ``<branches>`` is a list of
-        command-separated names of heads to treat this way.
+        comma-separated names of heads to treat this way.
+
+    ``--branches <branches>``
+        Lists branches to include/exclude in reporting. By default,
+        all branches are included. If this option is specified, only
+        branches listed are included. Alternatively, one can prefix a
+        branch with ``-`` to *exclude* it: then all but the excluded
+        ones are reported. ``<branches>`` is a list of comma-separated
+        names of heads to treat this way.
 
     ``--debug``
         Prints the mails that would normally be generated to

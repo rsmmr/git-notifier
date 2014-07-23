@@ -49,6 +49,7 @@ Options = [
     ("replyto", True, None, "email address for reply-to header"),
     ("mergediffs", True, set(), "branches for which complete merge diffs are to be included"),
     ("ignoreremotes", False, False, "don't report commits that a remote already knows"),
+    ("branches", True, None, "Branches to include or skip"),
     ]
 
 class State:
@@ -138,6 +139,18 @@ class GitConfig:
             users = os.path.join(os.environ["GL_ADMINDIR"], "conf/sender.cfg")
             if os.path.exists(users):
                 self.users = users
+
+        self.head_include = set()
+        self.head_exclude = set()
+
+        if self.branches:
+            branches = [b.strip() for b in self.branches.split(",")]
+
+            for b in branches:
+                if b.startswith("-"):
+                    self.head_exclude.add(b[1:])
+                else:
+                    self.head_include.add(b)
 
         self.readUsers()
 
@@ -256,6 +269,13 @@ def getCurrent():
 
     return state
 
+def reportHead(head):
+    if Config.head_include:
+        return head in Config.head_include and not head in Config.head_exclude
+
+    else:
+        return not head in Config.head_exclude
+
 Tmps = []
 
 def makeTmp():
@@ -354,6 +374,9 @@ def sendMail(out, fname):
         time.sleep(2)
 
 def entryAdded(key, value, rev):
+    if not reportHead(value):
+        return
+
     log("New %s %s" % (key, value))
 
     (out, fname) = generateMailHeader("%s '%s' created" % (key, value), rev)
@@ -364,6 +387,9 @@ def entryAdded(key, value, rev):
     sendMail(out, fname)
 
 def entryDeleted(key, value):
+    if not reportHead(value):
+        return
+
     log("Deleted %s %s" % (key, value))
 
     (out, fname) = generateMailHeader("%s '%s' deleted" % (key, value))
@@ -379,6 +405,12 @@ def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd, stat_cmd):
     if not heads:
         # On no branch, probably some old commit that still
         # gets referenced somehow. Skip.
+        return
+
+    for head in heads:
+        if reportHead(head):
+            break
+    else:
         return
 
     (out, fname) = generateMailHeader(subject, rev)
@@ -526,6 +558,9 @@ def reportPath(current, revs, force=False, subject_head=None):
 
 # Sends a summary mail for a set of revisions.
 def headMoved(head, path):
+    if not reportHead(head):
+        return
+
     log("Head moved: %s -> %s" % (head, path[-1]))
 
     subject = git("show '--pretty=format:%%s (%%h)' -s %s" % path[-1])
