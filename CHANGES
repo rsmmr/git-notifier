@@ -1,8 +1,26 @@
 
+0.5-5 | 2014-10-24 10:04:04 -0700
+
+  * Adding new option --branches to include/exclude individual branches.
+
+        ``--branches <branches>``
+            Lists branches to include/exclude in reporting. By default,
+            all branches are included. If this option is specified, only
+            branches listed are included. Alternatively, one can prefix a
+            branch with ``-`` to *exclude* it: then all but the excluded
+            ones are reported. ``<branches>`` is a list of comma-separated
+            names of heads to treat this way. (Robin Sommer)
+
+  * Changing quoted-printable header encoding so that it works with
+    mutt. (Robin Sommer)
+
+  * allowing --update to work without existing/creating state file.
+    (Robin Sommer)
+
 0.5-3 | 2014-05-14 20:10:47 -0700
 
   * Encode mail headers according to RFC 2047. (Robin Sommer)
-    
+
   * Don't send any emails for commits that aren't on any branch.
     (Robin Sommer)
 
@@ -25,7 +43,7 @@
 0.42-3 | 2013-09-19 12:12:58 -0700
 
   * Initial version of new github-notifier script.
-    
+
     This script mirrors repositories from GitHub locally to then run
     git-notifier on them. Still experimental, documentation
     forthcoming. (Robin Sommer)
@@ -69,7 +87,7 @@
 0.41-2 | 2012-12-17 12:48:24 -0800
 
   * --updateonly now also applies to initial run. (Matthias Vallentin)
-    
+
 0.41-1 | 2012-11-06 08:36:12 -0800
 
   * Removing check preventing mails on initialization. (Robin Sommer)

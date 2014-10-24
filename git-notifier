@@ -10,8 +10,9 @@ import sys
 import tempfile
 import time
 import email.header
+import mimify
 
-VERSION   = "0.5-3"  # Filled in automatically.
+VERSION   = "0.5-5"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
@@ -297,7 +298,10 @@ def encodeHeader(hdr):
     try:
         hdr.decode('ascii')
     except UnicodeDecodeError:
-        return email.header.Header(hdr, "utf8")
+        # The output of this doesn't work with mutt.
+        # return email.header.Header(hdr, "utf8")
+        hdr = hdr.decode('utf-8').encode('latin1') # mimify expects latin1.
+        return mimify.mime_encode_header(hdr)
     else:
         return hdr
 
@@ -516,7 +520,7 @@ def commit(current, rev, force=False, subject_head=None):
 def diff(head, first, last):
     # We record a pseudo-revision to avoid sending the same diff twice.
     rev = "%s-%s" % (head, last)
-    if not rev in current.diffs:
+    if current and not rev in current.diffs:
         log("New diff revision %s" % rev)
         current.diffs.add(rev)
 
@@ -593,7 +597,7 @@ else:
     log("Initial run, no reporting of changes")
     report = False
 
-current = getCurrent()
+current = None
 
 if Config.diff:
     # Manual diff mode. The argument must be of the form "[old-rev..]new-rev".
@@ -608,6 +612,8 @@ if Config.diff:
     diffPath("<manual-diff>", revs)
 
     sys.exit(0)
+
+current = getCurrent()
 
 if Config.manual:
     # Manual report mode. The argument must be of the form "[old-rev..]new-rev".
