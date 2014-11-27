@@ -3,7 +3,7 @@
 .. |date| date::
 
 .. Version number is filled in automatically.
-.. |version| replace:: 0.5-5
+.. |version| replace:: 0.5-6
 
 git-notifier
 ============
@@ -227,6 +227,11 @@ address, do ``git config hooks.mailinglist git-updates@foo.com``:
         than this value, a notification mail is still send out but
         the diff is excluded (and replaced with a note saying so).
         Default is 50K.
+
+    ``--maxage <days>``
+        Limits the age of commits to report. No commit older than this
+        many days will trigger a commit notification. Default is 30
+        days; zero disables the age check.
 
     ``--noupdate``
         Does not update the internal state file, meaning that any
