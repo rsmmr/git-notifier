@@ -12,7 +12,7 @@ import time
 import email.header
 import mimify
 
-VERSION   = "0.5-6"  # Filled in automatically.
+VERSION   = "0.6"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name

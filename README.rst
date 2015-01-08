@@ -3,7 +3,7 @@
 .. |date| date::
 
 .. Version number is filled in automatically.
-.. |version| replace:: 0.5-6
+.. |version| replace:: 0.6
 
 git-notifier
 ============
@@ -89,16 +89,15 @@ mail will be send for that change.
 Download
 --------
 
-The current release is `git-notifier 0.5
-<http://www.icir.org/robin/git-notifier/git-notifier-0.5.tar.gz>`_
+The current release is `git-notifier 0.6
+<http://www.icir.org/robin/git-notifier/git-notifier-0.6.tar.gz>`_
 
 Not surprisingly, ``git-notifier`` is maintained in a git repository
-that you clone::
+that you can clone::
 
     git clone git://git.icir.org/git-notifier
 
-You can also `browse the repository
-<http://git.icir.org/git-notifier.git>`_
+The repository is also `mirrored to GitHub <http://git.icir.org/git-notifier.git>`_.
 
 History
 -------
