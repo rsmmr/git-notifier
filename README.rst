@@ -97,7 +97,7 @@ that you can clone::
 
     git clone git://git.icir.org/git-notifier
 
-The repository is also `mirrored to GitHub <http://git.icir.org/git-notifier.git>`_.
+The repository is also `mirrored to GitHub <https://github.com/rsmmr/git-notifier>`_.
 
 History
 -------
