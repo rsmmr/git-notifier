@@ -10,9 +10,14 @@ import sys
 import tempfile
 import time
 import email.header
-import mimify
+import warnings
 
-VERSION   = "0.6"  # Filled in automatically.
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    # Python 2.6 reports this as deprecated.
+    import mimify
+
+VERSION   = "0.6-1"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
@@ -126,7 +131,7 @@ class GitConfig:
         self.parseArgs(args)
         self.maxdiffsize *= 1024 # KBytes to bytes.
 
-        now = subprocess.check_output("date +%s", shell=True)
+        now = time.time()
         self.maxage *= (24 * 60 * 60) # Days to secs.
         self.maxage = int(now) - self.maxage
 

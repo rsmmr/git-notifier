@@ -1,4 +1,11 @@
 
+0.6-1 | 2015-01-17 08:18:16 -0800
+
+  * Fixing git-notifier to work with Python 2.6. (Vincent Danen)
+
+        - Replace code for getting current time with something more reasonable.
+        - Suppress deprecation warning for mimify.
+
 0.6 | 2015-01-08 07:53:04 -0800
 
   * Release 0.6.
