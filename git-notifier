@@ -353,17 +353,23 @@ def generateMailHeader(subject, rev=None):
         else:
             sender = whoami
 
+    if rev:
+        date = "".join(git("show '--pretty=format:%%cD' -s %s" % rev))
+        date = 'Date: %s\n' % encodeHeader(date)
+    else:
+        date = ''
+
     print >>out, """From: %s
 To: %s
 Subject: %s %s
 %sX-Git-Repository: %s
-X-Mailer: %s %s
+%sX-Mailer: %s %s
 
 %s
 
 """ % (encodeHeader(sender), encodeHeader(Config.mailinglist),
        encodeHeader(emailprefix), encodeHeader(subject),
-       replyto, encodeHeader(repo),
+       replyto, encodeHeader(repo), date,
        Name, VERSION, mailTag("Repository", repo)),
 
     return (out, fname)
