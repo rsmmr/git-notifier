@@ -349,7 +349,7 @@ def generateMailHeader(subject, rev=None):
 
     if not sender:
         if rev:
-            sender = "".join(git("show '--pretty=format:%%cn <%%ce>' -s %s" % rev))
+            sender = "".join(git("show '--pretty=format:%%cn <%%ce>' -s %s^{commit}" % rev))
         else:
             sender = whoami
 
