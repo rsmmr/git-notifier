@@ -3,7 +3,7 @@
 .. |date| date::
 
 .. Version number is filled in automatically.
-.. |version| replace:: 0.6-3
+.. |version| replace:: 0.6-5
 
 git-notifier
 ============

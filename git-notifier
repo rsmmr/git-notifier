@@ -17,7 +17,7 @@ with warnings.catch_warnings():
     # Python 2.6 reports this as deprecated.
     import mimify
 
-VERSION   = "0.6-3"  # Filled in automatically.
+VERSION   = "0.6-5"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
@@ -349,7 +349,7 @@ def generateMailHeader(subject, rev=None):
 
     if not sender:
         if rev:
-            sender = "".join(git("show '--pretty=format:%%cn <%%ce>' -s %s" % rev))
+            sender = "".join(git("show '--pretty=format:%%cn <%%ce>' -s %s^{commit}" % rev))
         else:
             sender = whoami
 

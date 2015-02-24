@@ -1,4 +1,8 @@
 
+0.6-5 | 2015-02-23 16:44:14 -0800
+
+  * Retrieve author of tags properly. (Wolfgang Schnerring)
+
 0.6-3 | 2015-01-30 13:53:50 -0800
 
   * Add a Date header to the email with the original commit date.
