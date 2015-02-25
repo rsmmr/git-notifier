@@ -354,7 +354,7 @@ def generateMailHeader(subject, rev=None):
             sender = whoami
 
     if rev:
-        date = "".join(git("show '--pretty=format:%%cD' -s %s" % rev))
+        date = "".join(git("show '--pretty=format:%%cD' -s %s^{commit}" % rev))
         date = 'Date: %s\n' % encodeHeader(date)
     else:
         date = ""
