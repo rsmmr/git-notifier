@@ -4,6 +4,7 @@ import getpass
 import optparse
 import os
 import shutil
+import smtplib
 import socket
 import subprocess
 import sys
@@ -57,6 +58,7 @@ Options = [
     ("ignoreremotes", False, False, "don't report commits that a remote already knows"),
     ("branches", True, None, "Branches to include or skip"),
     ("maxage", True, 30, "max age for commits to report, older ones will be ignored (days; default 30)"),
+    ("mailserver", True, None, "SMTP server. If None, sendmail binary is used instead"),
     ]
 
 class State:
@@ -381,6 +383,12 @@ def sendMail(out, fname):
         for line in open(fname):
             print "    |", line,
         print ""
+
+    elif Config.mailserver:
+        smtp = smtplib.SMTP(Config.mailserver)
+        smtp.sendmail(Config.mailinglist, [Config.mailinglist], open(fname).read())
+        smtp.quit()
+
     else:
         stdin = subprocess.Popen("/usr/sbin/sendmail -t", shell=True, stdin=subprocess.PIPE).stdin
         for line in open(fname):

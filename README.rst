@@ -198,6 +198,11 @@ address, do ``git config hooks.mailinglist git-updates@foo.com``:
         Write logging information into the given file. Default is
         ``git-notifier.log`` inside the repository.
 
+    ``--mailserver <host>``
+        SMTP server to use for outgoing mails. Default is None, in
+        which case mail gets sent through the local ``sendmail`` (or
+        whatever ``--mailcmd`` defines alternatively).
+
     ``--mailinglist <address>``
         Specifies the recipient for all generated mails. Default is
         mailing to the system account that is running the script.
