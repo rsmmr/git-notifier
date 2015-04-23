@@ -28,6 +28,8 @@ NoMail    = "[nomail]"
 
 gitolite = "GL_USER" in os.environ
 
+mimify.CHARSET = 'UTF-8'
+
 if "LOGNAME" in os.environ:
     whoami = os.environ["LOGNAME"]
 else:
@@ -312,7 +314,6 @@ def encodeHeader(hdr):
     except UnicodeDecodeError:
         # The output of this doesn't work with mutt.
         # return email.header.Header(hdr, "utf8")
-        hdr = hdr.decode('utf-8').encode('latin1') # mimify expects latin1.
         return mimify.mime_encode_header(hdr)
     else:
         return hdr
