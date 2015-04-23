@@ -3,6 +3,7 @@
 import getpass
 import optparse
 import os
+import quopri
 import shutil
 import socket
 import subprocess
@@ -362,6 +363,8 @@ def generateMailHeader(subject, rev=None):
     print >>out, """From: %s
 To: %s
 Subject: %s %s
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 %s%sX-Git-Repository: %s
 X-Mailer: %s %s
 
@@ -377,14 +380,19 @@ X-Mailer: %s %s
 def sendMail(out, fname):
     out.close()
 
+    body = False
     if Config.debug:
         for line in open(fname):
-            print "    |", line,
+            if not body and not line.rstrip():
+                body = True
+            print "    |", quopri.encodestring(line) if body else line,
         print ""
     else:
         stdin = subprocess.Popen("/usr/sbin/sendmail -t", shell=True, stdin=subprocess.PIPE).stdin
         for line in open(fname):
-            print >>stdin, line,
+            if not body and not line.rstrip():
+                body = True
+            print >>stdin, quopri.encodestring(line) if body else line,
         stdin.close()
 
     # Wait a bit in case we're going to send more mails. Otherwise, the mails
