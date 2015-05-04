@@ -19,7 +19,7 @@ with warnings.catch_warnings():
     # Python 2.6 reports this as deprecated.
     import mimify
 
-VERSION   = "0.6-5"  # Filled in automatically.
+VERSION   = "0.6-10"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
@@ -46,6 +46,7 @@ Options = [
     ("emailprefix", True, "[git/%r]", "Subject prefix for mails"),
     ("hostname", True, socket.gethostname(), "host where the repository is hosted"),
     ("log", True, "%s.log" % Name, "set log output"),
+    ("mailcmd", True, "/usr/sbin/sendmail -t", "path to mailer executable"),
     ("mailinglist", True, whoami, "destination address for mails"),
     ("manual", True, None, "notify for a manually given set of revisions"),
     ("maxdiffsize", True, 50, "limit the size of diffs in mails (KB)"),
@@ -397,7 +398,7 @@ def sendMail(out, fname):
         smtp.quit()
 
     else:
-        stdin = subprocess.Popen("/usr/sbin/sendmail -t", shell=True, stdin=subprocess.PIPE).stdin
+        stdin = subprocess.Popen(Config.mailcmd, shell=True, stdin=subprocess.PIPE).stdin
         for line in open(fname):
             if not body and not line.rstrip():
                 body = True

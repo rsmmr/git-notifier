@@ -1,4 +1,19 @@
 
+0.6-10 | 2015-05-14 22:02:35 -0700
+
+  * Added 'mailcmd' option to allow non-standard sendmail location and
+    arguments. (Randall S. Becker)
+
+  * Transfer UTF-8 encoded body as quoted-printable. (Andrei Badea)
+
+  * Fixed exception from mimify when commit author contains non-latin1
+    characters. (Andrei Badea)
+
+  * Allow sending mail via SMTP as an alternative to sendmail.
+    (Wolfgang Schnerring)
+
+  * Retrieve date of tags properly. (Wolfgang Schnerring)
+
 0.6-5 | 2015-02-23 16:44:14 -0800
 
   * Retrieve author of tags properly. (Wolfgang Schnerring)

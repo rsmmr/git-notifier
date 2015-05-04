@@ -3,7 +3,7 @@
 .. |date| date::
 
 .. Version number is filled in automatically.
-.. |version| replace:: 0.6-5
+.. |version| replace:: 0.6-10
 
 git-notifier
 ============
@@ -197,6 +197,10 @@ address, do ``git config hooks.mailinglist git-updates@foo.com``:
     ``--log <file>``
         Write logging information into the given file. Default is
         ``git-notifier.log`` inside the repository.
+
+    ``--mailcmd <command>``
+        Specifies the command to use for sending mail. Default is
+        /usr/sbin/sendmail.
 
     ``--mailserver <host>``
         SMTP server to use for outgoing mails. Default is None, in
