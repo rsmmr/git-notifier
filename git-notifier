@@ -42,6 +42,7 @@ Options = [
     ("emailprefix", True, "[git/%r]", "Subject prefix for mails"),
     ("hostname", True, socket.gethostname(), "host where the repository is hosted"),
     ("log", True, "%s.log" % Name, "set log output"),
+    ("mailcmd", True, "/usr/sbin/sendmail -t", "mailer executable path"),
     ("mailinglist", True, whoami, "destination address for mails"),
     ("manual", True, None, "notify for a manually given set of revisions"),
     ("maxdiffsize", True, 50, "limit the size of diffs in mails (KB)"),
@@ -359,19 +360,19 @@ def generateMailHeader(subject, rev=None):
     else:
         date = ""
 
-    print >>out, """From: %s
-To: %s
-Subject: %s %s
+    print >>out, """From: %s""" % (encodeHeader(sender))
+    for toaddress in Config.mailinglist .split(";") :
+	    print >>out, """To: %s""" % (encodeHeader(toaddress))
+    print >>out, """Subject: %s %s
 %s%sX-Git-Repository: %s
 X-Mailer: %s %s
 
 %s
 
-""" % (encodeHeader(sender), encodeHeader(Config.mailinglist),
-       encodeHeader(emailprefix), encodeHeader(subject),
+""" % (encodeHeader(emailprefix), encodeHeader(subject),
        replyto, date, encodeHeader(repo),
        Name, VERSION, mailTag("Repository", repo)),
-
+    print >>out, """BODY:\n"""
     return (out, fname)
 
 def sendMail(out, fname):
@@ -382,7 +383,7 @@ def sendMail(out, fname):
             print "    |", line,
         print ""
     else:
-        stdin = subprocess.Popen("/usr/sbin/sendmail -t", shell=True, stdin=subprocess.PIPE).stdin
+        stdin = subprocess.Popen(Config.mailcmd, shell=True, stdin=subprocess.PIPE).stdin
         for line in open(fname):
             print >>stdin, line,
         stdin.close()
