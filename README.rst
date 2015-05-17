@@ -3,7 +3,7 @@
 .. |date| date::
 
 .. Version number is filled in automatically.
-.. |version| replace:: 0.6-10
+.. |version| replace:: 0.6-11
 
 git-notifier
 ============
@@ -372,6 +372,11 @@ Usage
         Runs the script in debug mode, which means that it will (1)
         log more verbosely and to stderr, and (2) run ``git-notifier``
         with the ``--debug`` and ``--noupdate`` options.
+
+    ``--update-only``
+        Updates the local clones of all repositories, but do es not run
+        ``git-notifier`` for the changes. This can be helpful to catch
+        up with remote changes without reporting them.
 
 License
 -------

@@ -19,7 +19,7 @@ with warnings.catch_warnings():
     # Python 2.6 reports this as deprecated.
     import mimify
 
-VERSION   = "0.6-10"  # Filled in automatically.
+VERSION   = "0.6-11"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name

@@ -11,7 +11,7 @@ import subprocess
 import sys
 import github
 
-VERSION   = "0.6-10"  # Filled in automatically.
+VERSION   = "0.6-11"  # Filled in automatically.
 
 Name       = "github-notifier"
 ConfigFile = "./%s.cfg" % Name
@@ -151,7 +151,9 @@ class Repository:
             gitClone(self)
 
         gitUpdate(self)
-        runNotifier(self)
+
+        if not Options.update_only:
+            runNotifier(self)
 
     def __str__(self):
         return self.path
@@ -241,6 +243,8 @@ optparser.add_option("-c", "--config", action="store", dest="config", default=Co
                      help="specify alternative configuration file to use")
 optparser.add_option("-d", "--debug", action="store_true", dest="debug", default=False,
                      help="enable debug mode, logs to stderr")
+optparser.add_option("-u", "--update-only", action="store_true", dest="update_only", default=False,
+                     help="update the local clones only, do not run git-notifier")
 
 (Options, args) = optparser.parse_args()
 

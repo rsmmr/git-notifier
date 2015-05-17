@@ -1,4 +1,10 @@
 
+0.6-11 | 2015-05-17 03:05:08 -0700
+
+  * New option --update-only for github-notifier. This only updates
+    the local clones of all repositories, but not no run git-notifier
+    on them. (Robin Sommer)
+
 0.6-10 | 2015-05-14 22:02:35 -0700
 
   * Added 'mailcmd' option to allow non-standard sendmail location and
