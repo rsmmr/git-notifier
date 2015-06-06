@@ -19,6 +19,17 @@ with warnings.catch_warnings():
     # Python 2.6 reports this as deprecated.
     import mimify
 
+try:
+    # Python 3
+    from configparser import ConfigParser
+    from configparser import NoSectionError
+    from configparser import NoOptionError
+except ImportError:
+    # Python 2
+    from ConfigParser import ConfigParser
+    from ConfigParser import NoSectionError
+    from ConfigParser import NoOptionError
+
 VERSION   = "0.6-11"  # Filled in automatically.
 
 Name      = "git-notifier"
@@ -26,6 +37,7 @@ CacheFile = ".%s.dat" % Name
 Separator = "\n>---------------------------------------------------------------\n"
 NoDiff    = "[nodiff]"
 NoMail    = "[nomail]"
+CfgFile   = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'git-notifier.conf')
 
 gitolite = "GL_USER" in os.environ
 
@@ -176,7 +188,7 @@ class GitConfig:
         parser = optparse.OptionParser(version=VERSION)
 
         for (name, arg, default, help) in Options:
-            defval = self._git_config(name, default)
+            defval = self._git_config(name, self._config_file(name, arg, default))
 
             if isinstance(default, int):
                 defval = int(defval)
@@ -216,6 +228,15 @@ class GitConfig:
     def _git_config(self, key, default):
         cfg = git(["config hooks.%s" % key])
         return cfg[0] if cfg else default
+
+    def _config_file(self, key, arg, default):
+        cfg = ConfigParser()
+        cfg.read(CfgFile)
+        try:
+            return cfg.get('git-notifier', key) if arg \
+                else cfg.getboolean('git-notifier', key)
+        except (NoSectionError, NoOptionError):
+            return default
 
 def log(msg):
     print >>Config.log, "%s - %s" % (time.asctime(), msg)
