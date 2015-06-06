@@ -11,7 +11,10 @@ import subprocess
 import sys
 import tempfile
 import time
+import email
+import email.charset
 import email.header
+import email.message
 import warnings
 
 with warnings.catch_warnings():
@@ -30,6 +33,7 @@ NoMail    = "[nomail]"
 gitolite = "GL_USER" in os.environ
 
 mimify.CHARSET = 'UTF-8'
+email.charset.add_charset('utf-8', email.Charset.QP, email.Charset.QP, 'utf-8')
 
 if "LOGNAME" in os.environ:
     whoami = os.environ["LOGNAME"]
@@ -314,21 +318,23 @@ def encodeHeader(hdr):
     try:
         hdr.decode('ascii')
     except UnicodeDecodeError:
-        # The output of this doesn't work with mutt.
-        # return email.header.Header(hdr, "utf8")
-        return mimify.mime_encode_header(hdr)
+        # This seems to work with mutt 1.5.23:
+        return email.header.Header(hdr, 'utf8').encode()
+
+        ## The output of this doesn't work with mutt.
+        ## return email.header.Header(hdr, "utf8")
+        #return mimify.mime_encode_header(hdr)
     else:
         return hdr
 
-def generateMailHeader(subject, rev=None):
-    if Config.mailsubjectlen:
-        try:
-            maxlen = int(Config.mailsubjectlen)
-            if len(subject) > maxlen:
-                subject = subject[:maxlen] + " ..."
-        except ValueError:
-            pass
+def encodeAddressList(addrs):
+    parsedAddrList = [email.utils.parseaddr(addr) for addr in addrs.split(',')]
+    parsedAddrList = [(encodeHeader(name), addr) \
+                        for (name, addr) in parsedAddrList]
+    return ', '.join([name + ' <' + addr + '>' \
+                        for (name, addr) in parsedAddrList])
 
+def getRepo():
     repo = Config.repouri
 
     if not repo:
@@ -343,9 +349,24 @@ def generateMailHeader(subject, rev=None):
         if repo.endswith(".git"):
             repo = repo[0:-4]
 
-    (out, fname) = makeTmp()
+    return repo
 
-    replyto = "Reply-To: %s\n" % encodeHeader(Config.replyto) if Config.replyto else ""
+def startMailBody():
+    (out, fname) = makeTmp()
+    print >>out, mailTag('repository', getRepo())
+    return (out, fname)
+
+def generateMail(subject, body, rev=None):
+    if Config.mailsubjectlen:
+        try:
+            maxlen = int(Config.mailsubjectlen)
+            if len(subject) > maxlen:
+                subject = subject[:maxlen] + " ..."
+        except ValueError:
+            pass
+
+    repo = getRepo()
+
     sender = Config.sender
 
     emailprefix = Config.emailprefix
@@ -358,53 +379,42 @@ def generateMailHeader(subject, rev=None):
         else:
             sender = whoami
 
+    msg = email.message.Message()
+    msg['From'] = encodeAddressList(sender)
+    msg['To'] = encodeAddressList(Config.mailinglist)
+    msg['Subject'] = encodeHeader('%s %s' % (emailprefix, subject))
+
+    if Config.replyto:
+        msg['Reply-To'] = encodeHeader(Config.replyto)
+
     if rev:
         date = "".join(git("show '--pretty=format:%%cD' -s %s^{commit}" % rev))
-        date = 'Date: %s\n' % encodeHeader(date)
-    else:
-        date = ""
+        msg['Date'] = encodeHeader(date)
 
-    print >>out, """From: %s
-To: %s
-Subject: %s %s
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-%s%sX-Git-Repository: %s
-X-Mailer: %s %s
+    msg['X-Git-Repository'] = encodeHeader(repo)
+    msg['X-Mailer'] = encodeHeader('%s %s' % (Name, VERSION))
+    msg.set_payload(body)
+    msg.set_charset('utf-8')
 
-%s
+    return msg.as_string()
 
-""" % (encodeHeader(sender), encodeHeader(Config.mailinglist),
-       encodeHeader(emailprefix), encodeHeader(subject),
-       replyto, date, encodeHeader(repo),
-       Name, VERSION, mailTag("Repository", repo)),
-
-    return (out, fname)
-
-def sendMail(out, fname):
+def sendMail(subject, out, fname, rev=None):
     out.close()
 
-    body = False
+    msg = generateMail(subject, open(fname).read(), rev)
+
     if Config.debug:
-        for line in open(fname):
-            if not body and not line.rstrip():
-                body = True
-            print "    |", quopri.encodestring(line) if body else line,
+        print msg
         print ""
 
     elif Config.mailserver:
         smtp = smtplib.SMTP(Config.mailserver)
-        smtp.sendmail(Config.mailinglist, [Config.mailinglist], open(fname).read())
+        smtp.sendmail(Config.mailinglist, [Config.mailinglist], msg)
         smtp.quit()
 
     else:
         stdin = subprocess.Popen(Config.mailcmd, shell=True, stdin=subprocess.PIPE).stdin
-        for line in open(fname):
-            if not body and not line.rstrip():
-                body = True
-
-            print >>stdin, quopri.encodestring(line) if body else line,
-
+        print >>stdin, msg
         stdin.close()
 
     # Wait a bit in case we're going to send more mails. Otherwise, the mails
@@ -419,12 +429,12 @@ def entryAdded(key, value, rev):
 
     log("New %s %s" % (key, value))
 
-    (out, fname) = generateMailHeader("%s '%s' created" % (key, value), rev)
+    (out, fname) = startMailBody()
 
     print >>out, mailTag("New %s" % key, value)
     print >>out, mailTag("Referencing", rev)
 
-    sendMail(out, fname)
+    sendMail("%s '%s' created" % (key, value), out, fname, rev)
 
 def entryDeleted(key, value):
     if not reportHead(value):
@@ -432,11 +442,11 @@ def entryDeleted(key, value):
 
     log("Deleted %s %s" % (key, value))
 
-    (out, fname) = generateMailHeader("%s '%s' deleted" % (key, value))
+    (out, fname) = startMailBody()
 
     print >>out, mailTag("Deleted %s" % key, value)
 
-    sendMail(out, fname)
+    sendMail("%s '%s' deleted" % (key, value), out, fname)
 
 # Sends a mail for a notification consistent of two parts: (1) the output of a
 # show command, and (2) the output of a diff command.
@@ -462,7 +472,7 @@ def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd, stat_cmd):
             log("Revision %s too old for reporting, skipped" % rev)
             return
 
-    (out, fname) = generateMailHeader(subject, rev)
+    (out, fname) = startMailBody()
 
     multi = "es" if len(heads) > 1 else ""
     heads = ",".join(heads)
@@ -485,14 +495,14 @@ def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd, stat_cmd):
             return
 
     else:
-        (tmp, tname) = makeTmp()
+        (tmp, tname) = startMailBody()
         diff = git(diff_cmd, stdout_to=tmp)
         tmp.close()
 
         size = os.path.getsize(tname)
 
         if size > Config.maxdiffsize:
-            (tmp, tname) = makeTmp()
+            (tmp, tname) = startMailBody()
             diff = git(stat_cmd, stdout_to=tmp)
             tmp.close()
             footer = "\nDiff suppressed because of size. To see it, use:\n\n    git %s" % diff_cmd
@@ -519,7 +529,7 @@ def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd, stat_cmd):
         print >>out, "debug: diff_cmd = git %s" % diff_cmd
         print >>out, "debug: stat_cmd = git %s" % stat_cmd
 
-    sendMail(out, fname)
+    sendMail(subject, out, fname, rev)
 
 # Sends notification for a specific revision.
 def commit(current, rev, force=False, subject_head=None):
@@ -614,7 +624,7 @@ def headMoved(head, path):
 
     subject = git("show '--pretty=format:%%s (%%h)' -s %s" % path[-1])
 
-    (out, fname) = generateMailHeader("%s's head updated: %s" % (head, subject[0]))
+    (out, fname) = startMailBody()
 
     print >>out, "Branch '%s' now includes:" % head
     print >>out, ""
@@ -622,7 +632,7 @@ def headMoved(head, path):
     for rev in path:
         print >>out, "    ", git("show -s --pretty=oneline --abbrev-commit %s" % rev)[0]
 
-    sendMail(out, fname)
+    sendMail("%s's head updated: %s" % (head, subject[0]), out, fname)
 
 Config = GitConfig(sys.argv[1:])
 
