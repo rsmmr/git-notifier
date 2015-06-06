@@ -125,7 +125,9 @@ Usage
 -----
 
 ``git-notifier`` supports the options below. Alternatively to
-giving them on the command line, all of them can alse be set via
+giving them on the command line, all of them can alse be set by
+editing ``git-notifier.conf``. Configuration values in this file
+can be overridden on a per-repo basis via
 ``git config hooks.<option>``. For example, to set a recipient
 address, do ``git config hooks.mailinglist git-updates@foo.com``:
 
