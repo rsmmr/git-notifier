@@ -360,10 +360,14 @@ def generateMailHeader(subject, rev=None):
 
         if gitolite:
             # Gitolite version.
-            repo = "ssh://%s@%s/%s" % (whoami, Config.hostname, getRepoName())
+            repo = "ssh://%u@%h/%r"
         else:
             # Standard version.
-            repo = "ssh://%s/%s" % (Config.hostname, getRepoName())
+            repo = "ssh://%h/%r"
+
+    repo = repo.replace('%u', whoami)
+    repo = repo.replace('%h', Config.hostname)
+    repo = repo.replace('%r', getRepoName())
 
     (out, fname) = makeTmp()
 
