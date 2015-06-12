@@ -307,6 +307,10 @@ def getCurrent():
 
     return state
 
+def getRepoName():
+    repo = os.path.basename(os.getcwd())
+    return repo[0:-4] if repo.endswith(".git") else repo
+
 def reportHead(head):
     if Config.head_include:
         return head in Config.head_include and not head in Config.head_exclude
@@ -356,13 +360,10 @@ def generateMailHeader(subject, rev=None):
 
         if gitolite:
             # Gitolite version.
-            repo = "ssh://%s@%s/%s" % (whoami, Config.hostname, os.path.basename(os.getcwd()))
+            repo = "ssh://%s@%s/%s" % (whoami, Config.hostname, getRepoName())
         else:
             # Standard version.
-            repo = "ssh://%s/%s" % (Config.hostname, os.path.basename(os.getcwd()))
-
-        if repo.endswith(".git"):
-            repo = repo[0:-4]
+            repo = "ssh://%s/%s" % (Config.hostname, getRepoName())
 
     (out, fname) = makeTmp()
 
@@ -370,8 +371,7 @@ def generateMailHeader(subject, rev=None):
     sender = Config.sender
 
     emailprefix = Config.emailprefix
-    repo_base = repo[repo.rfind("/") + 1:]
-    emailprefix = emailprefix.replace("%r", repo_base)
+    emailprefix = emailprefix.replace("%r", getRepoName())
 
     if not sender:
         if rev:
@@ -492,7 +492,7 @@ def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd, stat_cmd):
 
     if Config.link:
         url = Config.link.replace("%s", rev)
-        url = url.replace("%r", os.path.basename(os.getcwd()))
+        url = url.replace("%r", getRepoName())
         print >>out, mailTag("Link", url)
 
     footer = ""
