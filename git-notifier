@@ -65,6 +65,7 @@ Options = [
     ("mailsubjectlen", True, None, "limit the length of mail subjects (number of chars)"),
     ("noupdate", False, False, "do not update the state file"),
     ("repouri", True, None, "full URI for the repository"),
+    ("gitbasedir", True, os.path.dirname(os.getcwd()), "base file-system directory for git repos"),
     ("sender", True, sender, "sender address for mails"),
     ("link", True, None, "Link to insert into mail, %s will be replaced with revision"),
     ("updateonly", False, False, "update state file only, no mails"),
@@ -308,8 +309,16 @@ def getCurrent():
     return state
 
 def getRepoName():
-    repo = os.path.basename(os.getcwd())
-    return repo[0:-4] if repo.endswith(".git") else repo
+    # Ensure gitbasedir ends with a trailing directory separator.
+    gitbasedir = os.path.join(Config.gitbasedir, '')
+
+    cwd = os.getcwd()
+    if cwd.startswith(gitbasedir):
+        repoName = cwd[len(gitbasedir):]
+    else:
+        # Fall back on old behaviour.
+        repoName = os.path.basename(cwd)
+    return repoName[0:-4] if repoName.endswith(".git") else repoName
 
 def reportHead(head):
     if Config.head_include:
