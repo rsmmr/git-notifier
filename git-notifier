@@ -69,6 +69,7 @@ Options = [
     ("mailsubjectlen", True, None, "limit the length of mail subjects (number of chars)"),
     ("noupdate", False, False, "do not update the state file"),
     ("repouri", True, None, "full URI for the repository"),
+    ("gitbasedir", True, os.path.dirname(os.getcwd()), "base file-system directory for git repos"),
     ("sender", True, sender, "sender address for mails"),
     ("link", True, None, "Link to insert into mail, %s will be replaced with revision"),
     ("updateonly", False, False, "update state file only, no mails"),
@@ -311,6 +312,18 @@ def getCurrent():
 
     return state
 
+def getRepoName():
+    # Ensure gitbasedir ends with a trailing directory separator.
+    gitbasedir = os.path.join(Config.gitbasedir, '')
+
+    cwd = os.getcwd()
+    if cwd.startswith(gitbasedir):
+        repoName = cwd[len(gitbasedir):]
+    else:
+        # Fall back on old behaviour.
+        repoName = os.path.basename(cwd)
+    return repoName[0:-4] if repoName.endswith(".git") else repoName
+
 def reportHead(head):
     if Config.head_include:
         return head in Config.head_include and not head in Config.head_exclude
@@ -362,13 +375,14 @@ def getRepo():
 
         if gitolite:
             # Gitolite version.
-            repo = "ssh://%s@%s/%s" % (whoami, Config.hostname, os.path.basename(os.getcwd()))
+            repo = "ssh://%u@%h/%r"
         else:
             # Standard version.
-            repo = "ssh://%s/%s" % (Config.hostname, os.path.basename(os.getcwd()))
+            repo = "ssh://%h/%r"
 
-        if repo.endswith(".git"):
-            repo = repo[0:-4]
+    repo = repo.replace('%u', whoami)
+    repo = repo.replace('%h', Config.hostname)
+    repo = repo.replace('%r', getRepoName())
 
     return repo
 
@@ -391,8 +405,7 @@ def generateMail(subject, body, rev=None):
     sender = Config.sender
 
     emailprefix = Config.emailprefix
-    repo_base = repo[repo.rfind("/") + 1:]
-    emailprefix = emailprefix.replace("%r", repo_base)
+    emailprefix = emailprefix.replace("%r", getRepoName())
 
     if not sender:
         if rev:
@@ -502,7 +515,7 @@ def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd, stat_cmd):
 
     if Config.link:
         url = Config.link.replace("%s", rev)
-        url = url.replace("%r", os.path.basename(os.getcwd()))
+        url = url.replace("%r", getRepoName())
         print >>out, mailTag("Link", url)
 
     footer = ""

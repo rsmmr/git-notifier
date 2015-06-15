@@ -1,3 +1,4 @@
+.*.sw?
 test-repo.git
 *.tar.gz
 README.html
