@@ -529,14 +529,14 @@ def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd, stat_cmd):
             return
 
     else:
-        (tmp, tname) = startMailBody()
+        (tmp, tname) = makeTmp()
         diff = git(diff_cmd, stdout_to=tmp)
         tmp.close()
 
         size = os.path.getsize(tname)
 
         if size > Config.maxdiffsize:
-            (tmp, tname) = startMailBody()
+            (tmp, tname) = makeTmp()
             diff = git(stat_cmd, stdout_to=tmp)
             tmp.close()
             footer = "\nDiff suppressed because of size. To see it, use:\n\n    git %s" % diff_cmd
