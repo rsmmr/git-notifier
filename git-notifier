@@ -11,7 +11,10 @@ import subprocess
 import sys
 import tempfile
 import time
+import email
+import email.charset
 import email.header
+import email.message
 import warnings
 
 with warnings.catch_warnings():
@@ -19,17 +22,36 @@ with warnings.catch_warnings():
     # Python 2.6 reports this as deprecated.
     import mimify
 
-VERSION   = "0.6-11"  # Filled in automatically.
+try:
+    # Python 3
+    from configparser import ConfigParser
+    from configparser import NoSectionError
+    from configparser import NoOptionError
+except ImportError:
+    # Python 2
+    from ConfigParser import ConfigParser
+    from ConfigParser import NoSectionError
+    from ConfigParser import NoOptionError
+
+VERSION   = "0.6-22"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
 Separator = "\n>---------------------------------------------------------------\n"
 NoDiff    = "[nodiff]"
 NoMail    = "[nomail]"
+CfgName   = "git-notifier.conf"
+
+try:
+    # 2-tuple: (name, boolean) with boolen being True if file must exist.
+    ConfigPath = (os.environ["GIT_NOTIFIER_CONFIG"], True)
+except KeyError:
+    ConfigPath = (os.path.join(os.path.dirname(os.path.realpath(__file__)), CfgName), False)
 
 gitolite = "GL_USER" in os.environ
 
 mimify.CHARSET = 'UTF-8'
+email.charset.add_charset('utf-8', email.Charset.QP, email.Charset.QP, 'utf-8')
 
 if "LOGNAME" in os.environ:
     whoami = os.environ["LOGNAME"]
@@ -53,6 +75,7 @@ Options = [
     ("mailsubjectlen", True, None, "limit the length of mail subjects (number of chars)"),
     ("noupdate", False, False, "do not update the state file"),
     ("repouri", True, None, "full URI for the repository"),
+    ("gitbasedir", True, os.path.dirname(os.getcwd()), "base directory for all git repositories"),
     ("sender", True, sender, "sender address for mails"),
     ("link", True, None, "Link to insert into mail, %s will be replaced with revision"),
     ("updateonly", False, False, "update state file only, no mails"),
@@ -63,6 +86,7 @@ Options = [
     ("branches", True, None, "Branches to include or skip"),
     ("maxage", True, 30, "max age for commits to report, older ones will be ignored (days; default 30)"),
     ("mailserver", True, None, "SMTP server. If None, sendmail binary is used instead"),
+    ("config", True, ConfigPath, "Path to configuration file"),
     ]
 
 class State:
@@ -172,10 +196,30 @@ class GitConfig:
         self.readUsers()
 
     def parseArgs(self, args):
-
         parser = optparse.OptionParser(version=VERSION)
+        config = ConfigParser()
+        cfgpath = ConfigPath
+
+        for i in range(len(args)):
+            if args[i] == "--config":
+                cfgpath = (args[i+1], True)
+                break
+
+        if os.path.exists(cfgpath[0]):
+            try:
+                config.read(cfgpath[0])
+            except IOError as e:
+                print >>sys.stderr, "error reading configuration file: %s" % e
+                sys.exit(1)
+
+        elif cfgpath[1]:
+            print >>sys.stderr, "cannot open configuration file: %s" % cfgpath[0]
+            sys.exit(1)
 
         for (name, arg, default, help) in Options:
+            if config:
+                default = self._get_from_config_parser(config, name, arg, default)
+
             defval = self._git_config(name, default)
 
             if isinstance(default, int):
@@ -216,6 +260,15 @@ class GitConfig:
     def _git_config(self, key, default):
         cfg = git(["config hooks.%s" % key])
         return cfg[0] if cfg else default
+
+    def _get_from_config_parser(self, config, key, arg, default):
+        try:
+            if arg:
+                return config.get('git-notifier', key)
+            else:
+                return config.getboolean('git-notifier', key)
+        except (NoSectionError, NoOptionError):
+            return default
 
 def log(msg):
     print >>Config.log, "%s - %s" % (time.asctime(), msg)
@@ -286,6 +339,19 @@ def getCurrent():
 
     return state
 
+def getRepoName():
+    # Ensure gitbasedir ends with a trailing directory separator.
+    gitbasedir = os.path.join(Config.gitbasedir, '')
+
+    cwd = os.getcwd()
+    if cwd.startswith(gitbasedir):
+        repoName = cwd[len(gitbasedir):]
+    else:
+        # Fall back on old behaviour.
+        repoName = os.path.basename(cwd)
+
+    return repoName[0:-4] if repoName.endswith(".git") else repoName
+
 def reportHead(head):
     if Config.head_include:
         return head in Config.head_include and not head in Config.head_exclude
@@ -314,13 +380,44 @@ def encodeHeader(hdr):
     try:
         hdr.decode('ascii')
     except UnicodeDecodeError:
-        # The output of this doesn't work with mutt.
-        # return email.header.Header(hdr, "utf8")
-        return mimify.mime_encode_header(hdr)
+        return email.header.Header(hdr, 'utf8').encode()
     else:
         return hdr
 
-def generateMailHeader(subject, rev=None):
+def encodeAddressList(addrs):
+    def encodeAddress(name, addr):
+        if name:
+            return name + ' <' + addr + '>'
+        else:
+            return addr
+
+    parsedAddrList = [email.utils.parseaddr(addr) for addr in addrs.split(',')]
+    parsedAddrList = [(encodeHeader(name), addr) for (name, addr) in parsedAddrList]
+    return ', '.join([encodeAddress(name, addr) for (name, addr) in parsedAddrList])
+
+def getRepo():
+    repo = Config.repouri
+
+    if not repo:
+        if gitolite:
+            # Gitolite version.
+            repo = "ssh://%u@%h/%r"
+        else:
+            # Standard version.
+            repo = "ssh://%h/%r"
+
+    repo = repo.replace('%u', whoami)
+    repo = repo.replace('%h', Config.hostname)
+    repo = repo.replace('%r', getRepoName())
+
+    return repo
+
+def startMailBody():
+    (out, fname) = makeTmp()
+    print >>out, mailTag("Repository", getRepo())
+    return (out, fname)
+
+def generateMail(subject, body, rev=None):
     if Config.mailsubjectlen:
         try:
             maxlen = int(Config.mailsubjectlen)
@@ -329,28 +426,12 @@ def generateMailHeader(subject, rev=None):
         except ValueError:
             pass
 
-    repo = Config.repouri
+    repo = getRepo()
 
-    if not repo:
-
-        if gitolite:
-            # Gitolite version.
-            repo = "ssh://%s@%s/%s" % (whoami, Config.hostname, os.path.basename(os.getcwd()))
-        else:
-            # Standard version.
-            repo = "ssh://%s/%s" % (Config.hostname, os.path.basename(os.getcwd()))
-
-        if repo.endswith(".git"):
-            repo = repo[0:-4]
-
-    (out, fname) = makeTmp()
-
-    replyto = "Reply-To: %s\n" % encodeHeader(Config.replyto) if Config.replyto else ""
     sender = Config.sender
 
     emailprefix = Config.emailprefix
-    repo_base = repo[repo.rfind("/") + 1:]
-    emailprefix = emailprefix.replace("%r", repo_base)
+    emailprefix = emailprefix.replace("%r", getRepoName())
 
     if not sender:
         if rev:
@@ -358,53 +439,42 @@ def generateMailHeader(subject, rev=None):
         else:
             sender = whoami
 
+    msg = email.message.Message()
+    msg['From'] = encodeAddressList(sender)
+    msg['To'] = encodeAddressList(Config.mailinglist)
+    msg['Subject'] = encodeHeader('%s %s' % (emailprefix, subject))
+
+    if Config.replyto:
+        msg['Reply-To'] = encodeHeader(Config.replyto)
+
     if rev:
         date = "".join(git("show '--pretty=format:%%cD' -s %s^{commit}" % rev))
-        date = 'Date: %s\n' % encodeHeader(date)
-    else:
-        date = ""
+        msg['Date'] = encodeHeader(date)
 
-    print >>out, """From: %s
-To: %s
-Subject: %s %s
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-%s%sX-Git-Repository: %s
-X-Mailer: %s %s
+    msg['X-Git-Repository'] = encodeHeader(repo)
+    msg['X-Mailer'] = encodeHeader('%s %s' % (Name, VERSION))
+    msg.set_payload(body)
+    msg.set_charset('utf-8')
 
-%s
+    return msg.as_string()
 
-""" % (encodeHeader(sender), encodeHeader(Config.mailinglist),
-       encodeHeader(emailprefix), encodeHeader(subject),
-       replyto, date, encodeHeader(repo),
-       Name, VERSION, mailTag("Repository", repo)),
-
-    return (out, fname)
-
-def sendMail(out, fname):
+def sendMail(subject, out, fname, rev=None):
     out.close()
 
-    body = False
+    msg = generateMail(subject, open(fname).read(), rev)
+
     if Config.debug:
-        for line in open(fname):
-            if not body and not line.rstrip():
-                body = True
-            print "    |", quopri.encodestring(line) if body else line,
+        print msg
         print ""
 
     elif Config.mailserver:
         smtp = smtplib.SMTP(Config.mailserver)
-        smtp.sendmail(Config.mailinglist, [Config.mailinglist], open(fname).read())
+        smtp.sendmail(Config.mailinglist, [Config.mailinglist], msg)
         smtp.quit()
 
     else:
         stdin = subprocess.Popen(Config.mailcmd, shell=True, stdin=subprocess.PIPE).stdin
-        for line in open(fname):
-            if not body and not line.rstrip():
-                body = True
-
-            print >>stdin, quopri.encodestring(line) if body else line,
-
+        print >>stdin, msg
         stdin.close()
 
     # Wait a bit in case we're going to send more mails. Otherwise, the mails
@@ -419,12 +489,12 @@ def entryAdded(key, value, rev):
 
     log("New %s %s" % (key, value))
 
-    (out, fname) = generateMailHeader("%s '%s' created" % (key, value), rev)
+    (out, fname) = startMailBody()
 
     print >>out, mailTag("New %s" % key, value)
     print >>out, mailTag("Referencing", rev)
 
-    sendMail(out, fname)
+    sendMail("%s '%s' created" % (key, value), out, fname, rev)
 
 def entryDeleted(key, value):
     if not reportHead(value):
@@ -432,11 +502,11 @@ def entryDeleted(key, value):
 
     log("Deleted %s %s" % (key, value))
 
-    (out, fname) = generateMailHeader("%s '%s' deleted" % (key, value))
+    (out, fname) = startMailBody()
 
     print >>out, mailTag("Deleted %s" % key, value)
 
-    sendMail(out, fname)
+    sendMail("%s '%s' deleted" % (key, value), out, fname)
 
 # Sends a mail for a notification consistent of two parts: (1) the output of a
 # show command, and (2) the output of a diff command.
@@ -462,7 +532,7 @@ def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd, stat_cmd):
             log("Revision %s too old for reporting, skipped" % rev)
             return
 
-    (out, fname) = generateMailHeader(subject, rev)
+    (out, fname) = startMailBody()
 
     multi = "es" if len(heads) > 1 else ""
     heads = ",".join(heads)
@@ -471,7 +541,7 @@ def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd, stat_cmd):
 
     if Config.link:
         url = Config.link.replace("%s", rev)
-        url = url.replace("%r", os.path.basename(os.getcwd()))
+        url = url.replace("%r", getRepoName())
         print >>out, mailTag("Link", url)
 
     footer = ""
@@ -519,7 +589,7 @@ def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd, stat_cmd):
         print >>out, "debug: diff_cmd = git %s" % diff_cmd
         print >>out, "debug: stat_cmd = git %s" % stat_cmd
 
-    sendMail(out, fname)
+    sendMail(subject, out, fname, rev)
 
 # Sends notification for a specific revision.
 def commit(current, rev, force=False, subject_head=None):
@@ -614,7 +684,7 @@ def headMoved(head, path):
 
     subject = git("show '--pretty=format:%%s (%%h)' -s %s" % path[-1])
 
-    (out, fname) = generateMailHeader("%s's head updated: %s" % (head, subject[0]))
+    (out, fname) = startMailBody()
 
     print >>out, "Branch '%s' now includes:" % head
     print >>out, ""
@@ -622,7 +692,7 @@ def headMoved(head, path):
     for rev in path:
         print >>out, "    ", git("show -s --pretty=oneline --abbrev-commit %s" % rev)[0]
 
-    sendMail(out, fname)
+    sendMail("%s's head updated: %s" % (head, subject[0]), out, fname)
 
 Config = GitConfig(sys.argv[1:])
 

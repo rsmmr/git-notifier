@@ -3,7 +3,7 @@
 .. |date| date::
 
 .. Version number is filled in automatically.
-.. |version| replace:: 0.6-11
+.. |version| replace:: 0.6-22
 
 git-notifier
 ============
@@ -124,10 +124,30 @@ option below.
 Usage
 -----
 
-``git-notifier`` supports the options below. Alternatively to
-giving them on the command line, all of them can alse be set via
-``git config hooks.<option>``. For example, to set a recipient
-address, do ``git config hooks.mailinglist git-updates@foo.com``:
+``git-notifier`` supports the options below. Options can be either set
+on the command line, by editing a configuration file, or on a
+per-repository basis via ``git config hooks.<option>`` (this order
+also defines the priority when the same option appears multiple
+times). For example, to set a recipient address, do ``git config
+hooks.mailinglist git-updates@foo.com``:
+
+``git-notifier`` looks for a configuration file in three places, in
+this order:
+
+    * A configuration file can be specified on the command line
+      through ``--config <path>``.
+
+    * A configuration file can be specified by setting the environment
+      variable ``GIT_NOTIFIER_CONFIG`` to the path of the file.
+
+    * If neither of these is given, ``git-notifier`` looks for a file
+      ``git-notifier.conf`` in the same directory that the script itself
+      is located.
+
+The configuration file uses "INI-style", with an example coming with
+``git-notifier``.
+
+The options are:
 
     ``--allchanges <branches>``
         Lists branches for which *all* changes made to them should be
@@ -177,6 +197,10 @@ address, do ``git config hooks.mailinglist git-updates@foo.com``:
         name. Default is ``[git/%r]``. Note that the name of this
         option is compatible with some of other git notification
         scripts.
+
+    ``--gitbasedir"``
+        Specifies a base directory for the git repository. If not given,
+        the current directory is the default.
 
     ``--hostname <name>``
         Defines the hostname to use when building the repository

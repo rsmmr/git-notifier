@@ -1,4 +1,25 @@
 
+0.6-22 | 2015-06-19 17:35:36 -0700
+
+  * Added a configuration option "gitbasedir" for specifying the base
+    directory in the file system that holds the git repository. (Jed
+    Liu)
+
+  * Support the following substitutions in user-specified
+    repositories: '%u' for username, '%h' for hostname, '%r' for repo
+    name. (Jed Liu)
+
+  * Ignore vim swap files. (Jed Liu)
+
+  * Abstracted the functionality for obtaining the repository name.
+    (Jed Liu)
+
+  * Added configuration file support. See the README for specifics.
+    (Jed Liu/Robin Sommer)
+
+  * Use email package to better ensure RFC-compliance, and to better
+    automate QP encoding of message bodies. (Jed Liu)
+
 0.6-11 | 2015-05-17 03:05:08 -0700
 
   * New option --update-only for github-notifier. This only updates
