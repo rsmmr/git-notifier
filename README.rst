@@ -405,4 +405,4 @@ Usage
 License
 -------
 
-``git-notifier`` comes with a BSD-style licence.
+``git-notifier`` comes with a BSD-style license.
