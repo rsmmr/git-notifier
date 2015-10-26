@@ -3,7 +3,7 @@
 .. |date| date::
 
 .. Version number is filled in automatically.
-.. |version| replace:: 0.6-22
+.. |version| replace:: 0.6-25
 
 git-notifier
 ============
@@ -405,4 +405,4 @@ Usage
 License
 -------
 
-``git-notifier`` comes with a BSD-style licence.
+``git-notifier`` comes with a BSD-style license.

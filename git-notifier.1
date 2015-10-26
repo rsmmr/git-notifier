@@ -1,0 +1,169 @@
+.TH "GIT-NOTIFIER" 1
+
+.SH "NAME"
+git-notifier \- script to be used with git as a post-receive hook
+
+.SH "SYNOPSIS"
+.B git-notifier
+.RI [ options ]
+
+.SH "DESCRIPTION"
+\fBgit-notifier\fR is a script to be used with git as a post-receive hook. Once installed, it emails out a summary of all changes each time a user pushes an update to the repository. Different from other similar scripts, \fBgit-notifier\fR sends exactly one email per change, each of which includes a complete diff of all modifications as well as the set of branches from which the new revision can be reached. The scripts ensure that that each change is mailed out only exactly once by keeping a state file of already reported revisions.
+
+In addition, \fBgit-notifier\fR also mails updates when branches or annotated tags are created or removed; and it furthermore mails a revision summary if a head moves to now include commits already reported previously (e.g., on fast-forwards).
+
+If a commit message contains \fB[nodiff]\fR, the generated mail will not include a diff. If a commit message contains \fB[nomail]\fR, no mail will be send for that change.
+
+\fBgit-notifier\fR supports the options below. Alternatively to giving them on the command line, all of them can alse be set via \fBgit config hooks.<option>\fR. For example, to set a recipient address, do \fBgit config hooks.mailinglist git-updates@foo.com\fR.
+
+For full documentation, see the homepage at: \fBhttp://www.icir.org/robin/git-notifier/\fR.
+
+.SH "INSTALLATION"
+The basic installation is simple: just run the script from \fBhooks/post-receive\fR, as in:
+
+.B #!/bin/sh
+
+.B /full/path/to/git-notifier
+
+By default, the script will send its mails to the user running the \fBgit-notifier\fR (i.e., the one doing the update). As that's usually not the desired recipient, an alternative email address can be specified via command line or git options, see the mailinglist option below.
+
+.SH "OPTIONS"
+.TP
+.BI "\-\-allchanges <branches>"
+Lists \fB<branches>\fR for which all changes made to them should be mailed out as straight diffs to their previous state, independent of whether the corresponding commit has already been reported in the past. For merge commits, the mails include the full diff (i.e., git's \fBdiff -m\fR). This might for example make sense for master if one wants to closely track any modification applied.
+
+\fB<branches>\fR is a list of comma-separated names of heads to treat this way.
+.TP
+.BI "\-\-branches <branches>"
+Lists \fB<branches>\fR to include/exclude in reporting. By default, all branches are included. If this option is specified, only branches listed are included. Alternatively, one can prefix a branch with - to exclude it: then all but the excluded ones are reported.
+
+\fB<branches>\fR is a list of comma-separated names of heads to treat this way.
+.TP
+.BI "\-\-config="PATH
+.I PATH
+to alternative configuration file.
+.TP
+.BI "\-\-debug"
+Run the script in debug mode, which means that it will (1) log more verbosely and to stderr, and (2) run \fBgit-notifier\fR with the \fB\-\-debug\fR and \fB\-\-noupdate\fR options.
+.TP
+.BI "\-\-diff [rev1...] rev2"
+Mails out diffs between all revisions on the first parent's way from \fBrev1\fR to \fBrev2\fR. This option produces output similar to that of a head moving forward which is listed with \fB\-\-allchanges\fR. If \fBrev1\fR is skipped, \fBrev2~1\fR is assumed.
+
+This option is primarily for debugging and retropective (re-)generation of this outut, and does not change the current notifier state in any way. The main difference to \fB\-\-manual\fR is that it considers only revision on the first parent's path, and mails out actual diffs between these.
+.TP
+.BI "\-\-emailprefix"
+Specifies a prefix for the mails' subject line. If the prefix contain an \fB%r\fR, that will be replace with the repositories name. Default is \fB[git/%r]\fR. Note that the name of this option is compatible with some of other git notification scripts.
+.TP
+.BI "\-\-hostname <name>"
+Defines the hostname to use when building the repository path shown in the notification mails. Default is the canonical name of the system the script is running on.
+.TP
+.BI "\-\-ignoreremotes"
+If given, \fBgit-notifier\fR will not report any commits that are already known by any configured remote repository.
+.TP
+.BI "\-\-gitbasedir="DIRECTORY
+Specifies a base
+.I DIRECTORY
+for the git repository. If not given, the current directory is the default.
+.TP
+.BI "\-h, \-\-help"
+show help message and exit
+.TP
+.BI "\-\-link <url>"
+Specifies a \fB<url>\fR that will be included into notification mails for locating a changeset online. The \fB<url>\fR can contain a \fB%s\fR placeholder that will be replaced with the corresponding git revision number. The \fB<url>\fR can also contain an \fB%r\fR placeholder that will be replaced with the name of the repository.
+.TP
+.BI "\-\-log <file>"
+Write logging information into the given \fB<file>\fR. Default is \fBgit-notifier.log\fR inside the repository.
+.TP
+.BI "\-\-mailcmd <command>"
+Specifies the command to use for sending mail. Default is /usr/sbin/sendmail.
+.TP
+.BI "\-\-mailinglist <address>"
+Specifies the recipient for all generated mails. Default is mailing to the system account that is running the script.
+.TP
+.BI "\-\-mailserver <host>"
+SMTP server to use for outgoing mails. Default is \fBNone\fR, in which case mail gets sent through the local \fBsendmail\fR (or whatever \fB\-\-mailcmd\fR defines alternatively).
+.TP
+.BI "\-\-mailsubjectlen <max>"
+Limits subjects of generated mails to \fB<max>\fR characters. Default os no limit.
+.TP
+.BI "\-\-manual [rev1..] rev2"
+Mails out notifications for all revisions on the way from \fBrev1\fR to \fBrev2\fR. If \fBrev1\fR is skipped, \fBrev2~1\fR is assumed.
+
+This option is primarily for debugging and retropective (re-)generation of this output, and does not change the current notifier state in any way.
+.TP
+.BI "\-\-maxage <days>"
+Limits the age of commits to report. No commit older than this many days will trigger a commit notification. Default is 30 days; zero disables the age check.
+.TP
+.BI "\-\-maxdiffsize <size>"
+Limits the \fB<size>\R of mails by giving a maximum number of kilobytes that a diff may have. If the \fBdiff\fR for a change is larger than this value, a notification mail is still send out but the \fBdiff\fR is excluded (and replaced with a note saying so). Default is 50K.
+.TP
+.BI "\-\-mergediffs <branches>"
+Lists \fB<branches>\fR for which merges should include the full \fBdiff\fR, including all changes that are already part of branch commits.
+
+\fB<branches>\fR is a list of command-separated names of heads to treat this way.
+.TP
+.BI "\-\-noupdate"
+Does not update the internal state file, meaning that any updates will be reported again next time the script is run.
+.TP
+.BI "\-\-replyto <email>"
+Adds a Reply-To: \fB<email>\fR header to outgoing mails.
+
+.TP
+.BI "\-\-repouri="URI
+full
+.I URI
+for the repository
+
+.TP
+.BI "\-\-sender <address>"
+Defines the sender \fB<address>\fR for all generated mails. Default is the user doing the update (if \fBgitolite\fR is used, that's the gitolite acccount doing the push, not the system account running \fBgit-notifier\fR.)
+.TP
+.BI "\-\-update-only"
+Does not send out any mail notifications but still updates the index. In other words, all recent changes will be marked as "seen", without reporting them.
+.TP
+.BI "\-\-users <file>"
+This is only for installations using \fBgitolite <XXX>\fR, for which the default sender address for all mails would normally be the gitolite user account name of the person doing the push. With this option, one can alternatively specify a file that maps such account names to alternative addresses, which will then be used as the sender for mails.
+
+Note that even if \fB\-\-users\fR is not given, \fBgit-notifier\fR will still look for such a file in \fB../conf/sender.cfg\fR, relative to the top-level repository directory. In other words, you can check a file \fBsender.cfg\fR containing the mappings into gitolite's \fBconfig/\fR directory and it should Just Work.
+.TP
+.BI "\-\-version"
+Shows program's version number and exit
+
+.SH "FILES"
+.TP
+.I git-notifier.conf
+
+This is the git-notifier configuration file, which provides system-wide default configuration values. Configuration data is taken in the following order of precedence:
+
+1. command-line options
+
+2. repository-specific configuration (via
+.B git config hooks.<option>)
+
+3. this file
+
+In the default configuration file shipped with git-notifier, options are specified with their default value where possible, but are left commented. Uncommented options override the default value.
+
+.TP
+.I ../conf/sender.cfg
+
+This is only for installations using gitolite <XXX>, for which the default sender address for all mails would normally be the gitolite user account name of the person doing the push.
+
+The file must consist of line of the form <gitolite-user> <sender>, where sender will be used for the mails and can include spaces. Empty lines and lines starting with # are ignored. It's ok if for a user no entry is found, in which case the default value will be used.
+
+For example, if there's a gitolite user account "joe", one could provide a users file like this:
+
+.B joe    Joe Smith <joe@foo.bar>
+
+
+Now all mails triggered by Joe will have the specified sender.
+
+.SH "BUGS"
+Report bugs on https://github.com/rsmmr/git-notifier/issues
+.SH "SEE ALSO"
+\fBgit\fR(1), \fBgithub-notifier\fR(1)
+
+.SH "LICENSE"
+\fBgit-notifier\fR comes with a BSD-style license.
+.SH "AUTHOR"
+Robin Sommer \fB<robin@icir.org>\fR. This manpage is written by Lev Lamberov \fB<l.lamberov@gmail.com>\fR.

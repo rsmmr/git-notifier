@@ -1,0 +1,76 @@
+.TH "GITHUB-NOTIFIER" 1
+
+.SH "NAME"
+github-notifier \- companion script for git-notifier, that watches GitHub repositories for changes
+
+.SH "SYNOPSIS"
+.B github-notifier
+.RI [ options ]
+
+.SH "DESCRIPTION"
+\fBgithub-notifier\fR is a companion script for \fBgit-notifier\fR, that watches GitHub repositories for changes. The script maintains a local mirror of repositories you want to watch and runs \fBgit-notifier\fR locally on those to generate the notification mails.
+
+To setup \fBgithub-notifier\fR you create a configuration file \fBgithub-notifier.cfg\fR in the directory where you want to keep the clones. \fBgithub-notifier.cfg\fR is an "ini-style" file consisting of one or more sections, each of which defines a set of repositories to monitor, see below its description.
+
+For full documentation, see the homepage at: \fBhttp://www.icir.org/robin/git-notifier/\fR.
+
+.SH "OPTIONS"
+.TP
+.BI "\-\-allchanges <branches>"
+.BI "\-\-config="PATH
+.I PATH
+to alternative configuration file.
+.TP
+.BI "\-\-debug"
+Run the script in debug mode, which means that it will (1) log more verbosely and to stderr, and (2) run \fBgit-notifier\fR with the \fB\-\-debug\fR and \fB\-\-noupdate\fR options.
+
+.SH "FILES"
+.TP
+.I github-notifier.cfg
+The file should be placed in the directory where you want to keep the clones
+
+.TP
+.B Specifying Repositories
+
+The repositories entry takes a list of command-separated repositories to monitor. Each repository has the form
+\fB<user>/<repo>\fR, where \fB<user>\fR is a GitHub user (or organization) and \fB<repo>\fR is a repository that the user (or organization) maintains. \fB<repo>\fR can be the wildcard \fB*\fR to monitor all of a user's repositories (e.g., \fBrepositories=bro/*\fR). One can exclude individual repositories by prefixing them with a dash (e.g., \fBrepositories=bro/*,-bro/time-machine\fR).
+
+.TP
+.B Authentication
+
+By default, \fBgithub-notifier\fR only monitors public repositories. You can however also watch private ones if you provide it with suitable credentials using the user and token options:
+
+.B user=foo
+
+.B token=3238753465abc7634657zefg
+
+
+The token shouldn't be the user's password but a "personal access token" as you can generate it in the user's account settings.
+
+.TP
+.B Setting Notifier Options
+
+Within a set one can specify any of the standard \fBgit-notifier\fR options by prefixing them with \fBnotifier-\fR. The \fBnotifier-mailinglist\fR options above is an example. To, e.g., set a \fBReply-To\fR header, you would use \fBnotifier-replyto=somebody@else.net\fR.
+
+.SH "EXAMPLES"
+
+Here's an example set that watches just a single repository at \fBgithub.com/bro/time-machine\fR:
+
+.B [TimeMachine]
+
+.B repositories=bro/time-machine
+
+.B notifier-mailinglist=foo@bar.com
+
+
+This defines a set called \fBTimeMachine\fR consisting of just the one GitHub repository, sending notifications to the given email address. With this saved in the current directory as \fBgithub-notifier.cfg\fR, you can then run \fBgithub-notifier\fR and it will create a complete clone of the remote on its first run (and not send any mails yet). On subsequent executions, the script will update the clone and spawn \fBgit-notifier\fR to email out notifications. For now, the best way to automate this is to run \fBgithub-notifier\fR from \fBcron\fR.
+
+.SH "BUGS"
+Report bugs on https://github.com/rsmmr/git-notifier/issues
+.SH "SEE ALSO"
+\fBgit\fR(1), \fBgit-notifier\fR(1)
+
+.SH "LICENSE"
+\fBgit-notifier\fR comes with a BSD-style license.
+.SH "AUTHOR"
+Robin Sommer \fB<robin@icir.org>\fR. This manpage is written by Lev Lamberov \fB<l.lamberov@gmail.com>\fR.

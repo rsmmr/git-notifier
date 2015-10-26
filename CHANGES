@@ -1,4 +1,10 @@
 
+0.6-25 | 2015-10-26 16:31:37 -0700
+
+  * Fixing typo in README.rst (Lev Lamberov)
+
+  * Adding initial version of manpages. (Lev Lamberov)
+
 0.6-22 | 2015-06-19 17:35:36 -0700
 
   * Added a configuration option "gitbasedir" for specifying the base
