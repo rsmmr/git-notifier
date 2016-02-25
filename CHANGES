@@ -1,4 +1,8 @@
 
+0.6-26 | 2016-02-25 11:17:13 -0800
+
+  * Adding --textconv to "git diff-tree" command. (Robin Sommer)
+
 0.6-25 | 2015-10-26 16:31:37 -0700
 
   * Fixing typo in README.rst (Lev Lamberov)

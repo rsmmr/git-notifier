@@ -33,7 +33,7 @@ except ImportError:
     from ConfigParser import NoSectionError
     from ConfigParser import NoOptionError
 
-VERSION   = "0.6-25"  # Filled in automatically.
+VERSION   = "0.6-26"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
@@ -624,7 +624,7 @@ def commit(current, rev, force=False, subject_head=None):
     subject = "%s: %s" % (subject_head, subject[0])
 
     show_cmd = "show -s --no-color --find-copies-harder --pretty=medium %s" % rev
-    diff_cmd = "diff-tree --root --patch-with-stat --no-color --find-copies-harder --ignore-space-at-eol %s %s" % (merge_diff, rev)
+    diff_cmd = "diff-tree --root --patch-with-stat --no-color --find-copies-harder --ignore-space-at-eol --textconv %s %s" % (merge_diff, rev)
     stat_cmd = "diff-tree --root --stat --no-color --find-copies-harder --ignore-space-at-eol %s" % rev
 
     sendChangeMail(rev, subject, heads, show_cmd, diff_cmd, stat_cmd)
