@@ -1,4 +1,8 @@
 
+0.7 | 2016-07-25 07:46:21 -0700
+
+  * Release 0.7.
+
 0.6-26 | 2016-02-25 11:17:13 -0800
 
   * Adding --textconv to "git diff-tree" command. (Robin Sommer)
