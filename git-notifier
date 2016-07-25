@@ -33,7 +33,7 @@ except ImportError:
     from ConfigParser import NoSectionError
     from ConfigParser import NoOptionError
 
-VERSION   = "0.7"  # Filled in automatically.
+VERSION   = "release-1"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
@@ -623,9 +623,9 @@ def commit(current, rev, force=False, subject_head=None):
 
     subject = "%s: %s" % (subject_head, subject[0])
 
-    show_cmd = "show -s --no-color --find-copies-harder --pretty=medium %s" % rev
-    diff_cmd = "diff-tree --root --patch-with-stat --no-color --find-copies-harder --ignore-space-at-eol --textconv %s %s" % (merge_diff, rev)
-    stat_cmd = "diff-tree --root --stat --no-color --find-copies-harder --ignore-space-at-eol %s" % rev
+    show_cmd = "show -s --no-color --pretty=medium %s" % rev
+    diff_cmd = "diff-tree --root --patch-with-stat --no-color --ignore-space-at-eol --textconv %s %s" % (merge_diff, rev)
+    stat_cmd = "diff-tree --root --stat --no-color --ignore-space-at-eol %s" % rev
 
     sendChangeMail(rev, subject, heads, show_cmd, diff_cmd, stat_cmd)
 
@@ -646,9 +646,9 @@ def diff(head, first, last):
 
     heads = [head]
 
-    show_cmd = "show -s --no-color --find-copies-harder --pretty=medium %s" % last
-    diff_cmd = "diff --patch-with-stat -m --no-color --find-copies-harder --ignore-space-at-eol %s %s" % (first, last)
-    stat_cmd = "diff --stat -m --no-color --find-copies-harder --ignore-space-at-eol %s %s" % (first, last)
+    show_cmd = "show -s --no-color --pretty=medium %s" % last
+    diff_cmd = "diff --patch-with-stat -m --no-color --ignore-space-at-eol %s %s" % (first, last)
+    stat_cmd = "diff --stat -m --no-color --ignore-space-at-eol %s %s" % (first, last)
 
     sendChangeMail(last, subject, heads, show_cmd, diff_cmd, stat_cmd)
 

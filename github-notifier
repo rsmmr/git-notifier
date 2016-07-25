@@ -11,7 +11,7 @@ import subprocess
 import sys
 import github
 
-VERSION   = "0.7"  # Filled in automatically.
+VERSION   = "release-1"  # Filled in automatically.
 
 Name       = "github-notifier"
 ConfigFile = "./%s.cfg" % Name
