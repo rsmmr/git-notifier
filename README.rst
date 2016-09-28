@@ -3,7 +3,7 @@
 .. |date| date::
 
 .. Version number is filled in automatically.
-.. |version| replace:: release-1
+.. |version| replace:: 0.7-3
 
 git-notifier
 ============
@@ -322,11 +322,12 @@ script maintains a local mirror of repositories you want to watch and
 runs ``git-notifier`` locally on those to generate the notification
 mails.
 
-To setup ``github-notifier`` you create a configuration file
-``github-notifier.cfg`` in the directory where you want to keep the
-clones. ``github-notifier.cfg`` is an "ini-style" file consisting of
-one or more sections, each of which defines a set of repositories to
-monitor.
+To setup ``github-notifier``, you first need to install `PyGithub
+<https://github.com/PyGithub/PyGithub>`_ (``pip install pygithub``).
+Then create a configuration file ``github-notifier.cfg`` in the
+directory where you want to keep the clones. ``github-notifier.cfg``
+is an "ini-style" file consisting of one or more sections, each of
+which defines a set of repositories to monitor.
 
 Here's an example set that watches just a single repository at
 ``github.com/bro/time-machine``::

@@ -1,4 +1,12 @@
 
+0.7-3 | 2016-09-28 12:59:27 -0700
+
+  * Adding note that github-notifier requires PyGitHub. (Robin Sommer)
+
+  * Explicitly specifying encoding when reading configuration file.
+    Leaving it out could cause exceptions in some settings. (Robin
+    Sommer)
+
 0.7-1 | 2016-07-25 08:05:14 -0700
 
   * Remove use of git option --find-copies-harder. (Robin Sommer)
