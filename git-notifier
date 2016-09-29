@@ -207,7 +207,12 @@ class GitConfig:
 
         if os.path.exists(cfgpath[0]):
             try:
-                config.read(cfgpath[0], encoding="utf8")
+                try:
+                    config.read(cfgpath[0], encoding="utf8")
+                except TypeError:
+                    # Support Python versions that don't have the 'encoding'
+                    # parameter.
+                    config.read(cfgpath[0])
             except IOError as e:
                 print >>sys.stderr, "error reading configuration file: %s" % e
                 sys.exit(1)
