@@ -82,6 +82,12 @@ def gitUpdate(repo):
     runCommand("git --bare fetch --quiet %s +refs/heads/*:refs/heads/*" % repo.url(True))
     runCommand("git --bare fetch --quiet %s +refs/tags/*:refs/tags/*" % repo.url(True))
     runCommand("git remote update >/dev/null 2>&1")
+
+    # git-notifier picks this up.
+    fname = open("repo-name.dat", "w")
+    print >>fname, repo.name
+    fname.close()
+
     popDirectory()
 
 def runNotifier(repo):

@@ -350,6 +350,15 @@ def getRepoName():
     # Ensure gitbasedir ends with a trailing directory separator.
     gitbasedir = os.path.join(Config.gitbasedir, '')
 
+    if os.path.exists("repo-name.dat"):
+        try:
+            fname = open("repo-name.dat")
+            name = fname.readline()
+            fname.close()
+            return name.strip()
+        except:
+            pass
+
     cwd = os.getcwd()
     if cwd.startswith(gitbasedir):
         repoName = cwd[len(gitbasedir):]
