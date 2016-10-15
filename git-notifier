@@ -15,6 +15,7 @@ import email
 import email.charset
 import email.header
 import email.message
+import email.utils
 import warnings
 
 with warnings.catch_warnings():
@@ -77,6 +78,7 @@ Options = [
     ("repouri", True, None, "full URI for the repository"),
     ("gitbasedir", True, os.path.dirname(os.getcwd()), "base directory for all git repositories"),
     ("sender", True, sender, "sender address for mails"),
+    ("keeprealnames", True, None, "with --sender, keep real name from commit"),
     ("link", True, None, "Link to insert into mail, %s will be replaced with revision"),
     ("updateonly", False, False, "update state file only, no mails"),
     ("users", True, None, "location of a user-to-email mapping file"),
@@ -433,16 +435,26 @@ def generateMail(subject, body, rev=None):
 
     repo = getRepo()
 
-    sender = Config.sender
-
     emailprefix = Config.emailprefix
     emailprefix = emailprefix.replace("%r", getRepoName())
 
-    if not sender:
-        if rev:
-            sender = "".join(git("show '--pretty=format:%%cn <%%ce>' -s %s^{commit}" % rev))
+    if rev:
+        committer = "".join(git("show '--pretty=format:%%cn <%%ce>' -s %s^{commit}" % rev))
+    else:
+        committer = "git-notifier"
+
+    if Config.sender:
+        if Config.keeprealnames:
+            (realname, _) = email.utils.parseaddr(committer)
+            (_, addr) = email.utils.parseaddr(Config.sender)
+            if realname and addr:
+                sender = ("%s <%s>" % (realname, addr))
+            else:
+                sender = Config.sender
         else:
-            sender = whoami
+            sender = Config.sender
+    else:
+        sender = committer
 
     msg = email.message.Message()
     msg['From'] = encodeAddressList(sender)

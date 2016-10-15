@@ -211,6 +211,13 @@ The options are:
         If given, ``git-notifier`` will not report any commits that
         are already known by any configured remote repository. 
 
+    ``--keeprealnames``
+        If used along with ``--sender``, mails will preserve
+        the committer's real name in their ``From`` line, while still
+        using the ``--sender`` email address. This can be useful if the
+        outgoing mail server does not permit setting arbitrary sender
+        email addresses.
+
     ``--link <url>``
         Specifies a URL that will be included into notification mails
         for locating a changeset online. The URL can contain a "%s"
