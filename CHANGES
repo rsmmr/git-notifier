@@ -1,4 +1,38 @@
 
+0.7-8 | 2016-10-15 09:57:18 -0700
+
+  * New SMTP options. (Robin Sommer)
+
+        ``--mailserveruser <user>``
+            User name to use for authenticating to the SMTP server.
+            ``--mailserverpassword`` must be given as well.
+
+        ``--mailserverpassword <password>``
+            Password to use for authenticating to the SMTP server.
+            ``--mailserveruser`` must be given as well.
+
+        ``--mailserverfrom <email>``
+            Alternative envelope sender address when using an SMTP server.
+            By default, the envelope sender is either the ``--sender`` if
+            given, or the destination ``--mailinglist`` if not.
+
+  * SMTP sessions are now using TLS. (Robin Sommer)
+
+  * SMTP sessions are now cached across multiple mails. (Robin Sommer)
+
+  * Prettyfing repository names in github-notifier. (Robin Sommer)
+
+  * New option to preserver committer's real name. (Robin Sommer)
+
+    ``--keeprealnames``
+            If used along with ``--sender``, the mails will preserve the
+            committer's real name in their ``From`` line, while still
+            using the ``--sender`` email address. This can be useful if the
+            outgoing mail server does not permit setting arbitrary sender
+            email addresses.
+
+  * Fix Python version incompatibility. (Robin Sommer)
+
 0.7-3 | 2016-09-28 12:59:27 -0700
 
   * Adding note that github-notifier requires PyGitHub. (Robin Sommer)

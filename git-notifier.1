@@ -68,6 +68,9 @@ for the git repository. If not given, the current directory is the default.
 .BI "\-h, \-\-help"
 show help message and exit
 .TP
+.BI "\-\-keeprealnames <user>"
+If used along with \fB--sender\fR, mails will preserve the committer's real name in their \fBFrom\fR line, while still using the \fB--sender\fR email address. This can be useful if the outgoing mail server does not permit setting arbitrary sender email addresses.
+.TP
 .BI "\-\-link <url>"
 Specifies a \fB<url>\fR that will be included into notification mails for locating a changeset online. The \fB<url>\fR can contain a \fB%s\fR placeholder that will be replaced with the corresponding git revision number. The \fB<url>\fR can also contain an \fB%r\fR placeholder that will be replaced with the name of the repository.
 .TP
@@ -75,13 +78,22 @@ Specifies a \fB<url>\fR that will be included into notification mails for locati
 Write logging information into the given \fB<file>\fR. Default is \fBgit-notifier.log\fR inside the repository.
 .TP
 .BI "\-\-mailcmd <command>"
-Specifies the command to use for sending mail. Default is /usr/sbin/sendmail.
+Specifies the command to use for sending mail. Default is \fB/usr/sbin/sendmail\fR.
 .TP
 .BI "\-\-mailinglist <address>"
 Specifies the recipient for all generated mails. Default is mailing to the system account that is running the script.
 .TP
 .BI "\-\-mailserver <host>"
 SMTP server to use for outgoing mails. Default is \fBNone\fR, in which case mail gets sent through the local \fBsendmail\fR (or whatever \fB\-\-mailcmd\fR defines alternatively).
+.TP
+.BI "\-\-mailserverfrom <email>"
+Alternative envelope sender address when using an SMTP server. By default, the envelope sender is either the \fB--sender\fR if given, or the destination \fB--mailinglist\fR if not.
+.TP
+.BI "\-\-mailserverpassword <password>"
+Password to use for authenticating to the SMTP server. \fB--mailserveruser\fR must be given as well.
+.TP
+.BI "\-\-mailserveruser <user>"
+User name to use for authenticating to the SMTP server. \fB--mailserverpassword\fR must be given as well.
 .TP
 .BI "\-\-mailsubjectlen <max>"
 Limits subjects of generated mails to \fB<max>\fR characters. Default os no limit.
