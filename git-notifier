@@ -60,6 +60,7 @@ else:
     whoami = getpass.getuser()
 
 sender = os.environ["GL_USER"] if gitolite else None
+smtp_session = None
 
 Options = [
     # Name, argument, default, help,
@@ -88,6 +89,9 @@ Options = [
     ("branches", True, None, "Branches to include or skip"),
     ("maxage", True, 30, "max age for commits to report, older ones will be ignored (days; default 30)"),
     ("mailserver", True, None, "SMTP server. If None, sendmail binary is used instead"),
+    ("mailserveruser", True, None, "User for SMTP server. If None, no authentication is used"),
+    ("mailserverpassword", True, None, "Password for SMTP server. If None, no authentication is used"),
+    ("mailserverfrom", True, None, "Explicit MAIL_FROM for SMTP server. If None, same as sender in email header"),
     ("config", True, ConfigPath, "Path to configuration file"),
     ]
 
@@ -389,6 +393,11 @@ def deleteTmps():
     for tmp in Tmps:
         os.unlink(tmp)
 
+    global smtp_session
+
+    if smtp_session:
+        smtp_session.quit()
+
 def mailTag(key, value):
     return "%-11s: %s" % (key, value)
 
@@ -494,9 +503,43 @@ def sendMail(subject, out, fname, rev=None):
         print ""
 
     elif Config.mailserver:
-        smtp = smtplib.SMTP(Config.mailserver)
-        smtp.sendmail(Config.mailinglist, [Config.mailinglist], msg)
-        smtp.quit()
+        m = Config.mailserver.split(":")
+        server = m[0].strip()
+
+        if len(m) >= 3:
+            user = m[1].strip()
+            password = m[2].strip()
+        else:
+            user = None
+            password = None
+
+        try:
+            global smtp_session
+            if not smtp_session:
+                smtp_session = smtplib.SMTP(server, timeout=120)
+                smtp_session.starttls()
+                smtp_session.ehlo()
+
+                if Config.mailserveruser and Config.mailserverpassword:
+                    smtp_session.login(Config.mailserveruser, Config.mailserverpassword)
+
+            mail_from = Config.mailserverfrom
+
+            if not mail_from:
+                mail_from = Config.sender
+
+            if not mail_from:
+                mail_from = Config.mailinglist
+
+            smtp_session.sendmail(mail_from, [Config.mailinglist], msg)
+
+        except smtplib.SMTPException as e:
+            log("SMTP error: %s" % str(e))
+            smtp_session = None
+
+        except socket.timeout:
+            log("Timeout on SMTP session")
+            smtp_session = None
 
     else:
         stdin = subprocess.Popen(Config.mailcmd, shell=True, stdin=subprocess.PIPE).stdin

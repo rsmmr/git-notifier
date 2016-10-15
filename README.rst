@@ -238,6 +238,19 @@ The options are:
         which case mail gets sent through the local ``sendmail`` (or
         whatever ``--mailcmd`` defines alternatively).
 
+    ``--mailserverfrom <email>``
+        Alternative envelope sender address when using an SMTP server.
+        By default, the envelope sender is either the ``--sender`` if
+        given, or the destination ``--mailinglist`` if not.
+
+    ``--mailserverpassword <password>``
+        Password to use for authenticating to the SMTP server.
+        ``--mailserveruser`` must be given as well.
+
+    ``--mailserveruser <user>``
+        User name to use for authenticating to the SMTP server.
+        ``--mailserverpassword`` must be given as well.
+
     ``--mailinglist <address>``
         Specifies the recipient for all generated mails. Default is
         mailing to the system account that is running the script.
