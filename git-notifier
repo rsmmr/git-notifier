@@ -34,7 +34,7 @@ except ImportError:
     from ConfigParser import NoSectionError
     from ConfigParser import NoOptionError
 
-VERSION   = "0.7-9"  # Filled in automatically.
+VERSION   = "0.7-10"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
@@ -442,7 +442,7 @@ def startMailBody():
     print >>out, mailTag("Repository", getRepo())
     return (out, fname)
 
-def generateMail(subject, body, rev=None):
+def generateMail(subject, body, rev, type):
     if Config.mailsubjectlen:
         try:
             maxlen = int(Config.mailsubjectlen)
@@ -457,7 +457,17 @@ def generateMail(subject, body, rev=None):
     emailprefix = emailprefix.replace("%r", getRepoName())
 
     if rev:
-        committer = "".join(git("show '--pretty=format:%%cn <%%ce>' -s %s^{commit}" % rev))
+        committer = None
+
+        if type == "tag":
+            output = git("show -q '--pretty=format:' '%s^{tag}'" % rev)
+            for line in output:
+                if line.startswith("Tagger:"):
+                    committer = line[7:].strip()
+
+        if not committer:
+            committer = "".join(git("show '--pretty=format:%%cn <%%ce>' -s %s^{commit}" % rev))
+
     else:
         committer = "git-notifier"
 
@@ -493,10 +503,10 @@ def generateMail(subject, body, rev=None):
 
     return msg.as_string()
 
-def sendMail(subject, out, fname, rev=None):
+def sendMail(subject, out, fname, rev=None, type=None):
     out.close()
 
-    msg = generateMail(subject, open(fname).read(), rev)
+    msg = generateMail(subject, open(fname).read(), rev, type)
 
     if Config.debug:
         print msg
@@ -563,7 +573,7 @@ def entryAdded(key, value, rev):
     print >>out, mailTag("New %s" % key, value)
     print >>out, mailTag("Referencing", rev)
 
-    sendMail("%s '%s' created" % (key, value), out, fname, rev)
+    sendMail("%s '%s' created" % (key, value), out, fname, rev, type=key)
 
 def entryDeleted(key, value):
     if not reportHead(value):

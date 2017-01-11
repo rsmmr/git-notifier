@@ -1,4 +1,9 @@
 
+0.7-10 | 2017-01-11 00:37:35 -0500
+
+  * For new tags send emails with the tagger's address. Addresses #17.
+    (Robin Sommer)
+
 0.7-9 | 2016-10-15 10:08:51 -0700
 
   * Fixing version information. (Robin Sommer)
