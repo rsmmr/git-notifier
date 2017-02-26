@@ -228,10 +228,11 @@ class GitConfig:
             sys.exit(1)
 
         for (name, arg, default, help) in Options:
+            conf_default = default
             if config:
-                default = self._get_from_config_parser(config, name, arg, default)
+                conf_default = self._get_from_config_parser(config, name, arg, default)
 
-            defval = self._git_config(name, default)
+            defval = self._git_config(name, conf_default)
 
             if isinstance(default, int):
                 defval = int(defval)
