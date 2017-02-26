@@ -167,9 +167,10 @@ class GitConfig:
         self.parseArgs(args)
         self.maxdiffsize *= 1024 # KBytes to bytes.
 
-        now = time.time()
-        self.maxage *= (24 * 60 * 60) # Days to secs.
-        self.maxage = int(now) - self.maxage
+        if self.maxage:
+            now = time.time()
+            self.maxage *= (24 * 60 * 60) # Days to secs.
+            self.maxage = int(now) - self.maxage
 
         if self.allchanges and not isinstance(self.allchanges, set):
             self.allchanges = set([head.strip() for head in self.allchanges.split(",")])
