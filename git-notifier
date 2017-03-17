@@ -34,7 +34,7 @@ except ImportError:
     from ConfigParser import NoSectionError
     from ConfigParser import NoOptionError
 
-VERSION   = "0.7-10"  # Filled in automatically.
+VERSION   = "0.7-15"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
@@ -167,9 +167,10 @@ class GitConfig:
         self.parseArgs(args)
         self.maxdiffsize *= 1024 # KBytes to bytes.
 
-        now = time.time()
-        self.maxage *= (24 * 60 * 60) # Days to secs.
-        self.maxage = int(now) - self.maxage
+        if self.maxage:
+            now = time.time()
+            self.maxage *= (24 * 60 * 60) # Days to secs.
+            self.maxage = int(now) - self.maxage
 
         if self.allchanges and not isinstance(self.allchanges, set):
             self.allchanges = set([head.strip() for head in self.allchanges.split(",")])
@@ -228,10 +229,11 @@ class GitConfig:
             sys.exit(1)
 
         for (name, arg, default, help) in Options:
+            conf_default = default
             if config:
-                default = self._get_from_config_parser(config, name, arg, default)
+                conf_default = self._get_from_config_parser(config, name, arg, default)
 
-            defval = self._git_config(name, default)
+            defval = self._git_config(name, conf_default)
 
             if isinstance(default, int):
                 defval = int(defval)
@@ -513,20 +515,10 @@ def sendMail(subject, out, fname, rev=None, type=None):
         print ""
 
     elif Config.mailserver:
-        m = Config.mailserver.split(":")
-        server = m[0].strip()
-
-        if len(m) >= 3:
-            user = m[1].strip()
-            password = m[2].strip()
-        else:
-            user = None
-            password = None
-
         try:
             global smtp_session
             if not smtp_session:
-                smtp_session = smtplib.SMTP(server, timeout=120)
+                smtp_session = smtplib.SMTP(Config.mailserver, timeout=120)
                 smtp_session.starttls()
                 smtp_session.ehlo()
 

@@ -3,7 +3,7 @@
 .. |date| date::
 
 .. Version number is filled in automatically.
-.. |version| replace:: 0.7-10
+.. |version| replace:: 0.7-15
 
 git-notifier
 ============
@@ -233,7 +233,7 @@ The options are:
         Specifies the command to use for sending mail. Default is
         /usr/sbin/sendmail.
 
-    ``--mailserver <host>``
+    ``--mailserver <host>[:<port>]``
         SMTP server to use for outgoing mails. Default is None, in
         which case mail gets sent through the local ``sendmail`` (or
         whatever ``--mailcmd`` defines alternatively).

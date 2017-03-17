@@ -1,4 +1,15 @@
 
+0.7-15 | 2017-03-17 16:26:14 -0700
+
+  * Disable 'maxage' check when zero, as the docs say. (Jeff Stein)
+
+  * Correct 'maxage' and 'maxdiffsize' parsing from config. Integers
+    were not getting parsed correctly from configuration files. (Jeff
+    Stein)
+
+  * Support SMTP port in the mail server setting, and remove the old
+    colon-syntax for specifying mail server credentials. (Jeff Stein)
+
 0.7-10 | 2017-01-11 00:37:35 -0500
 
   * For new tags send emails with the tagger's address. Addresses #17.
