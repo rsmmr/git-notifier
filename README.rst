@@ -31,7 +31,7 @@ keeping a state file of already reported revisions.
 ``git-notifier`` integrates nicely with `gitolite
 <https://github.com/sitaramc/gitolite>`_, and it also comes with a
 companion script ``github-notifier`` that watches `GitHub
-<github.com>`_ repositories for changes.
+<https://github.com/rsmmr/git-notifier>`_ repositories for changes.
 
 Here's example of a ``git-notifier`` mail::
 
