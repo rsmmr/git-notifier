@@ -79,8 +79,8 @@ def gitUpdate(repo):
 
     pushDirectory(repo.path)
     runCommand("git --bare init --quiet")
-    runCommand("git --bare fetch --quiet %s +refs/heads/*:refs/heads/*" % repo.url(True))
-    runCommand("git --bare fetch --quiet %s +refs/tags/*:refs/tags/*" % repo.url(True))
+    runCommand("git --bare fetch --prune --quiet %s +refs/heads/*:refs/heads/*" % repo.url(True))
+    runCommand("git --bare fetch --prune --quiet %s +refs/tags/*:refs/tags/*" % repo.url(True))
     runCommand("git remote update >/dev/null 2>&1")
 
     # git-notifier picks this up.
