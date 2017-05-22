@@ -1,4 +1,9 @@
 
+0.7-17 | 2017-05-21 18:27:33 -0700
+
+  * Sync tag/branch deletion by fetching with --prune. (Robert
+    Korulczyk)
+
 0.7-15 | 2017-03-17 16:26:14 -0700
 
   * Disable 'maxage' check when zero, as the docs say. (Jeff Stein)
