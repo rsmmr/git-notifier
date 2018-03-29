@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import getpass
+import itertools
 import optparse
 import os
 import quopri
@@ -16,12 +17,6 @@ import email.charset
 import email.header
 import email.message
 import email.utils
-import warnings
-
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    # Python 2.6 reports this as deprecated.
-    import mimify
 
 try:
     # Python 3
@@ -38,7 +33,7 @@ VERSION   = "0.7-17"  # Filled in automatically.
 
 Name      = "git-notifier"
 CacheFile = ".%s.dat" % Name
-Separator = "\n>---------------------------------------------------------------\n"
+Separator = "\n>---------------------------------------------------------------\n\n"
 NoDiff    = "[nodiff]"
 NoMail    = "[nomail]"
 CfgName   = "git-notifier.conf"
@@ -51,8 +46,7 @@ except KeyError:
 
 gitolite = "GL_USER" in os.environ
 
-mimify.CHARSET = 'UTF-8'
-email.charset.add_charset('utf-8', email.Charset.QP, email.Charset.QP, 'utf-8')
+email.charset.add_charset('utf-8', email.charset.QP, email.charset.QP, 'utf-8')
 
 if "LOGNAME" in os.environ:
     whoami = os.environ["LOGNAME"]
@@ -117,18 +111,18 @@ class State:
         out = open(file, "w")
 
         for (head, ref) in self.heads.items():
-            print >>out, "head", head, ref
+            out.write("head %s %s\n" % (head, ref))
 
         for (tag, ref) in self.tags.items():
-            print >>out, "tag", tag, ref
+            out.write("tag %s %s\n" % (tag, ref))
 
         for rev in self.revs:
-            print >>out, "rev", rev
+            out.write("rev %s\n" % rev)
 
         # No longer used.
         #
         # for rev in self.diffs:
-        #     print >>out, "diff", rev
+        #     out.write("diff %s\n" % rev)
 
     def readFrom(self, file):
         self.clear()
@@ -221,11 +215,11 @@ class GitConfig:
                     # parameter.
                     config.read(cfgpath[0])
             except IOError as e:
-                print >>sys.stderr, "error reading configuration file: %s" % e
+                sys.stderr.write("error reading configuration file: %s\n" % e)
                 sys.exit(1)
 
         elif cfgpath[1]:
-            print >>sys.stderr, "cannot open configuration file: %s" % cfgpath[0]
+            sys.stderr.write("cannot open configuration file: %s\n" % cfgpath[0])
             sys.exit(1)
 
         for (name, arg, default, help) in Options:
@@ -284,7 +278,7 @@ class GitConfig:
             return default
 
 def log(msg):
-    print >>Config.log, "%s - %s" % (time.asctime(), msg)
+    Config.log.write("%s - %s\n" % (time.asctime(), msg))
 
 def error(msg):
     log("Error: %s" % msg)
@@ -296,7 +290,7 @@ def git(args, stdout_to=subprocess.PIPE, all=False):
 
     try:
         if Config.debug:
-            print >>sys.stderr, "> git " + args
+            sys.stderr.write("> git %s\n" % args)
     except NameError:
         # Config may not be defined yet.
         pass
@@ -304,7 +298,7 @@ def git(args, stdout_to=subprocess.PIPE, all=False):
     try:
         child = subprocess.Popen("git " + args, shell=True, stdin=None, stdout=stdout_to, stderr=subprocess.PIPE)
         (stdout, stderr) = child.communicate()
-    except OSError, e:
+    except OSError as e:
         error("cannot start git: %s" % str(e))
 
     if child.returncode != 0 and stderr:
@@ -314,6 +308,7 @@ def git(args, stdout_to=subprocess.PIPE, all=False):
     if stdout_to != subprocess.PIPE:
         return []
 
+    stdout = stdout.decode("utf-8")
     if not all:
         return [line.strip() for line in stdout.split("\n") if line]
     else:
@@ -338,7 +333,7 @@ def getTags(state):
             state.tags[tag] = rev
 
 def getReachableRefs(state):
-    keys = ["'%s'" % k for k in state.heads.keys() + state.tags.keys()]
+    keys = ["'%s'" % k for k in itertools.chain(state.heads.keys(), state.tags.keys())]
 
     if keys:
         for rev in git(["rev-list"] + keys):
@@ -401,9 +396,11 @@ def deleteTmps():
         smtp_session.quit()
 
 def mailTag(key, value):
-    return "%-11s: %s" % (key, value)
+    return "%-11s: %s\n" % (key, value)
 
 def encodeHeader(hdr):
+    if sys.version_info >= (3,):
+        return hdr
     try:
         hdr.decode('ascii')
     except UnicodeDecodeError:
@@ -441,7 +438,7 @@ def getRepo():
 
 def startMailBody():
     (out, fname) = makeTmp()
-    print >>out, mailTag("Repository", getRepo())
+    out.write(mailTag("Repository", getRepo()))
     return (out, fname)
 
 def generateMail(subject, body, rev, type):
@@ -511,8 +508,8 @@ def sendMail(subject, out, fname, rev=None, type=None):
     msg = generateMail(subject, open(fname).read(), rev, type)
 
     if Config.debug:
-        print msg
-        print ""
+        print(msg)
+        print("")
 
     elif Config.mailserver:
         try:
@@ -545,7 +542,7 @@ def sendMail(subject, out, fname, rev=None, type=None):
 
     else:
         stdin = subprocess.Popen(Config.mailcmd, shell=True, stdin=subprocess.PIPE).stdin
-        print >>stdin, msg
+        stdin.write(msg.encode("utf-8") + "\n".encode("utf-8"))
         stdin.close()
 
     # Wait a bit in case we're going to send more mails. Otherwise, the mails
@@ -562,8 +559,8 @@ def entryAdded(key, value, rev):
 
     (out, fname) = startMailBody()
 
-    print >>out, mailTag("New %s" % key, value)
-    print >>out, mailTag("Referencing", rev)
+    out.write(mailTag("New %s" % key, value))
+    out.write(mailTag("Referencing", rev))
 
     sendMail("%s '%s' created" % (key, value), out, fname, rev, type=key)
 
@@ -575,7 +572,7 @@ def entryDeleted(key, value):
 
     (out, fname) = startMailBody()
 
-    print >>out, mailTag("Deleted %s" % key, value)
+    out.write(mailTag("Deleted %s" % key, value))
 
     sendMail("%s '%s' deleted" % (key, value), out, fname)
 
@@ -608,12 +605,12 @@ def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd, stat_cmd):
     multi = "es" if len(heads) > 1 else ""
     heads = ",".join(heads)
 
-    print >>out, mailTag("On branch%s" % multi, heads)
+    out.write(mailTag("On branch%s" % multi, heads))
 
     if Config.link:
         url = Config.link.replace("%s", rev)
         url = url.replace("%r", getRepoName())
-        print >>out, mailTag("Link", url)
+        out.write(mailTag("Link", url))
 
     footer = ""
     show = git(show_cmd)
@@ -638,27 +635,27 @@ def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd, stat_cmd):
             tmp.close()
             footer = "\nDiff suppressed because of size. To see it, use:\n\n    git %s" % diff_cmd
 
-    print >>out, Separator
+    out.write(Separator)
 
     for line in git(show_cmd, all=True):
         if line == "---":
-            print >>out, Separator
+            out.write(Separator)
         else:
-            print >>out, line
+            out.write(line + "\n")
 
-    print >>out, Separator
+    out.write(Separator)
 
     if tname:
         for line in open(tname):
-            print >>out, line,
+            out.write(line)
 
-    print >>out, footer
+    out.write(footer + "\n")
 
     if Config.debug:
-        print >>out, "-- "
-        print >>out, "debug: show_cmd = git %s" % show_cmd
-        print >>out, "debug: diff_cmd = git %s" % diff_cmd
-        print >>out, "debug: stat_cmd = git %s" % stat_cmd
+        out.write("-- \n")
+        out.write("debug: show_cmd = git %s\n" % show_cmd)
+        out.write("debug: diff_cmd = git %s\n" % diff_cmd)
+        out.write("debug: stat_cmd = git %s\n" % stat_cmd)
 
     sendMail(subject, out, fname, rev)
 
@@ -757,11 +754,10 @@ def headMoved(head, path):
 
     (out, fname) = startMailBody()
 
-    print >>out, "Branch '%s' now includes:" % head
-    print >>out, ""
+    out.write("Branch '%s' now includes:\n\n" % head)
 
     for rev in path:
-        print >>out, "    ", git("show -s --pretty=oneline --abbrev-commit %s" % rev)[0]
+        out.write("    %s\n" % git("show -s --pretty=oneline --abbrev-commit %s" % rev)[0])
 
     sendMail("%s's head updated: %s" % (head, subject[0]), out, fname)
 
@@ -771,7 +767,7 @@ log("Running for %s" % os.getcwd())
 
 if Config.debug:
     for (name, arg, default, help) in Options:
-        print >>sys.stderr, "[Option %s: %s]" % (name, Config.__dict__[name])
+        sys.stderr.write("[Option %s: %s]\n" % (name, Config.__dict__[name]))
 
 cache = State()
 
