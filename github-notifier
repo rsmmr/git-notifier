@@ -15,7 +15,13 @@ try:
     from ConfigParser import ConfigParser, NoSectionError, NoOptionError
 except ImportError:
     # Python 3
-    from configparser import ConfigParser, NoSectionError, NoOptionError
+    from configparser import NoSectionError, NoOptionError
+    import configparser
+
+    class ConfigParser(configparser.ConfigParser):
+        def __init__(self, *args, **kw):
+            kw['interpolation'] = None
+            super(ConfigParser, self).__init__(*args, **kw)
 
 
 VERSION   = "0.7-17"  # Filled in automatically.

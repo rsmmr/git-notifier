@@ -20,9 +20,14 @@ import email.utils
 
 try:
     # Python 3
-    from configparser import ConfigParser
+    import configparser
     from configparser import NoSectionError
     from configparser import NoOptionError
+
+    class ConfigParser(configparser.ConfigParser):
+        def __init__(self, *args, **kw):
+            kw['interpolation'] = None
+            super(ConfigParser, self).__init__(*args, **kw)
 except ImportError:
     # Python 2
     from ConfigParser import ConfigParser
