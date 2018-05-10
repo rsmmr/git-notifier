@@ -313,7 +313,8 @@ def git(args, stdout_to=subprocess.PIPE, all=False):
     if stdout_to != subprocess.PIPE:
         return []
 
-    stdout = stdout.decode("utf-8")
+    if sys.version_info >= (3,):
+        stdout = stdout.decode("utf-8")
     if not all:
         return [line.strip() for line in stdout.split("\n") if line]
     else:
