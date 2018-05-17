@@ -418,6 +418,9 @@ Usage
         log more verbosely and to stderr, and (2) run ``git-notifier``
         with the ``--debug`` and ``--noupdate`` options.
 
+    ``--log``
+        Specifies an alternative log file.
+
     ``--update-only``
         Updates the local clones of all repositories, but do es not run
         ``git-notifier`` for the changes. This can be helpful to catch
