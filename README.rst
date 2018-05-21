@@ -258,6 +258,14 @@ The options are:
     ``--mailsubjectlen <max>`` Limits subjects of generated mails to
         ``<max>`` characters. Default os no limit.
 
+    ``--mailheader-* <value>``
+        Any extra header that needs to be set in the mail message.
+        For example, ``--mailheader-X-Repo=Linux`` would result
+        in an ``x-repo: Linux`` header being added to the message.
+        Note that mail headers names are case-insentive and will be
+        converted to lowercase since both ``git-config`` and
+        Python's ``ConfigParser`` return keys in lowercase.
+
     ``--manual [rev1..]rev2``
         Mails out notifications for all revisions on the way from
         ``rev1`` to ``rev2``. If ``rev1`` is skipped, ``rev2~1`` is

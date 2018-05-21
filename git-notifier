@@ -35,14 +35,15 @@ except ImportError:
     from ConfigParser import NoSectionError
     from ConfigParser import NoOptionError
 
-VERSION   = "0.7-17"  # Filled in automatically.
+VERSION    = "0.7-17"  # Filled in automatically.
 
-Name      = "git-notifier"
-CacheFile = ".%s.dat" % Name
-Separator = "\n>---------------------------------------------------------------\n\n"
-NoDiff    = "[nodiff]"
-NoMail    = "[nomail]"
-CfgName   = "git-notifier.conf"
+Name       = "git-notifier"
+CacheFile  = ".%s.dat" % Name
+Separator  = "\n>---------------------------------------------------------------\n\n"
+NoDiff     = "[nodiff]"
+NoMail     = "[nomail]"
+CfgName    = "git-notifier.conf"
+CfgSection = "git-notifier"
 
 try:
     # 2-tuple: (name, boolean) with boolen being True if file must exist.
@@ -228,6 +229,13 @@ class GitConfig:
             sys.stderr.write("cannot open configuration file: %s\n" % cfgpath[0])
             sys.exit(1)
 
+        mailheaders_names = self.getMailHeaderNamesFromConfigParser(config) \
+            + self.getMailHeaderNamesFromGitConfig() \
+            + self.getMailHeaderNamesFromArgs(args)
+
+        for h in set(mailheaders_names):
+            Options.append([h, True, None, None])
+
         for (name, arg, default, help) in Options:
             conf_default = default
             if config:
@@ -257,6 +265,10 @@ class GitConfig:
         for (name, arg, default, help) in Options:
             self.__dict__[name] = options.__dict__[name]
 
+    def getMailHeaders(self):
+        return {k.replace("mailheader-", ""):
+                v for k, v in iteritems(self.__dict__) if k.startswith("mailheader-")}
+
     def readUsers(self):
         if self.users and os.path.exists(self.users):
             for line in open(self.users):
@@ -277,11 +289,56 @@ class GitConfig:
     def _get_from_config_parser(self, config, key, arg, default):
         try:
             if arg:
-                return config.get('git-notifier', key)
+                return config.get(CfgSection, key)
             else:
-                return config.getboolean('git-notifier', key)
+                return config.getboolean(CfgSection, key)
         except (NoSectionError, NoOptionError):
             return default
+
+    def getMailHeaderNamesFromConfigParser(self, config):
+        if not config.has_section(CfgSection):
+            return []
+
+        config_items = config.items(CfgSection)
+        return [h[0] for h in config_items if h[0].startswith("mailheader-")]
+
+    def getMailHeaderNamesFromGitConfig(self):
+        # Not using --name-only here since it's only available on Git 2.6+.
+        git_cfgs = git(["config --list"])
+
+        mail_cfgs = []
+        if not git_cfgs:
+            return mail_cfgs
+
+        for cfg in git_cfgs:
+            if cfg.startswith("hooks.mailheader-"):
+                cfg_name = cfg.split("=")[0]
+                mail_cfgs.append(cfg_name[6:])
+
+        return mail_cfgs
+
+    def getMailHeaderNamesFromArgs(self, args):
+        args_headers = []
+        for (i, a) in enumerate(args):
+            if not a.startswith("--mailheader-"):
+                continue
+
+            # Convert the header name to lowercase (but keep value case)
+            # so the behavior is consistent with that of ConfigParser
+            # and git-config.
+            normalized_arg = a[:a.index("=")].lower() + a[a.index("="):]
+            args[i] = normalized_arg
+            args_headers.append(normalized_arg[2:normalized_arg.index("=")])
+
+        return args_headers
+
+def iteritems(d):
+    try:
+        # Python 2
+        return d.iteritems()
+    except AttributeError:
+        # Python 3
+        return iter(d.items())
 
 def log(msg):
     Config.log.write("%s - %s\n" % (time.asctime(), msg))
@@ -449,6 +506,12 @@ def startMailBody():
     out.write(mailTag("Repository", getRepo()))
     return (out, fname)
 
+def addCustomHeaders(msg):
+    headers = Config.getMailHeaders()
+
+    for k, v in iteritems(headers):
+        msg.add_header(k, encodeHeader(v))
+
 def generateMail(subject, body, rev, type):
     if Config.mailsubjectlen:
         try:
@@ -505,6 +568,8 @@ def generateMail(subject, body, rev, type):
 
     msg['X-Git-Repository'] = encodeHeader(repo)
     msg['X-Mailer'] = encodeHeader('%s %s' % (Name, VERSION))
+
+    addCustomHeaders(msg)
     msg.set_payload(body)
     msg.set_charset('utf-8')
 
