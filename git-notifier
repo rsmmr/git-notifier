@@ -267,7 +267,7 @@ class GitConfig:
 
     def getMailHeaders(self):
         return {k.replace("mailheader-", ""):
-                v for k, v in self.__dict__.iteritems() if k.startswith("mailheader-")}
+                v for k, v in iteritems(self.__dict__) if k.startswith("mailheader-")}
 
     def readUsers(self):
         if self.users and os.path.exists(self.users):
@@ -331,6 +331,14 @@ class GitConfig:
             args_headers.append(normalized_arg[2:normalized_arg.index("=")])
 
         return args_headers
+
+def iteritems(d):
+    try:
+        # Python 2
+        return d.iteritems()
+    except AttributeError:
+        # Python 3
+        return iter(d.items())
 
 def log(msg):
     print >>Config.log, "%s - %s" % (time.asctime(), msg)
@@ -496,7 +504,7 @@ def startMailBody():
 def addCustomHeaders(msg):
     headers = Config.getMailHeaders()
 
-    for k, v in headers.iteritems():
+    for k, v in iteritems(headers):
         msg.add_header(k, encodeHeader(v))
 
 def generateMail(subject, body, rev, type):
