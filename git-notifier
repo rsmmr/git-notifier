@@ -7,6 +7,7 @@ import os
 import quopri
 import shutil
 import smtplib
+import string
 import socket
 import subprocess
 import sys
@@ -340,7 +341,7 @@ def getTags(state):
             state.tags[tag] = rev
 
 def getReachableRefs(state):
-    keys = ["'%s'" % k for k in itertools.chain(state.heads.keys(), state.tags.keys())]
+    keys = ["'%s'" % k for k in [k.replace('\'', '\'\"\'\"\'') for k in itertools.chain(state.heads.keys(), state.tags.keys())]]
 
     if keys:
         for rev in git(["rev-list"] + keys):
