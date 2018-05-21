@@ -28,7 +28,6 @@ VERSION   = "0.7-17"  # Filled in automatically.
 
 Name       = "github-notifier"
 ConfigFile = "./%s.cfg" % Name
-LogFile    = "%s.log" % Name
 
 Config = None
 Options = None
@@ -262,6 +261,8 @@ optparser.add_option("-c", "--config", action="store", dest="config", default=Co
                      help="specify alternative configuration file to use")
 optparser.add_option("-d", "--debug", action="store_true", dest="debug", default=False,
                      help="enable debug mode, logs to stderr")
+optparser.add_option("-l", "--log", action="store", dest="log", default="%s.log" % Name,
+                     help="specify an alternative log file to use")
 optparser.add_option("-u", "--update-only", action="store_true", dest="update_only", default=False,
                      help="update the local clones only, do not run git-notifier")
 
@@ -280,7 +281,7 @@ Config.read(Options.config)
 if Options.debug:
     Config.log = sys.stderr
 else:
-    Config.log = open(LogFile, "a")
+    Config.log = open(Options.log, "a")
 
 (basedir, fname) = os.path.split(Options.config)
 
