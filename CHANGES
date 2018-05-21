@@ -1,4 +1,20 @@
 
+0.7-31 | 2018-05-21 15:17:31 -0700
+
+  * Add support for custom headers in mail messages.  This adds
+    support for custom headers through "--mailheader-<name>=<value>"
+    options either on the command line options, inside the repository
+    configuration, or inside the configuration file. (Samir Aguiar)
+
+  * Support for custom log file in github-notifier. github-notifier
+    gets a new "[-l|--log]" command line option to allow users to use
+    a custom logfile. (Samir Aguiar)
+
+  * Fix "rev-list" call for branch names containing single-quotes.
+    (Ronny Schuetz)
+
+  * Make github-notifier compatible with Python-3. (Wolfgang Schnerring)
+
 0.7-17 | 2017-05-21 18:27:33 -0700
 
   * Sync tag/branch deletion by fetching with --prune. (Robert

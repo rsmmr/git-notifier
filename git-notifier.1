@@ -98,6 +98,9 @@ User name to use for authenticating to the SMTP server. \fB--mailserverpassword\
 .BI "\-\-mailsubjectlen <max>"
 Limits subjects of generated mails to \fB<max>\fR characters. Default os no limit.
 .TP
+.BI "\-\-mailheader-* <value>"
+Any extra header that needs to be set in the mail message. For example, \fB--mailheader-X-Repo=Linux\fR would result in an \fBx-repo: Linux\fR header being added to the message. Note that mail headers names are case-insentive and will be converted to lowercase since both \fBgit-config\fR and Python's \fBConfigParser\fR return keys in lowercase.
+.TP
 .BI "\-\-manual [rev1..] rev2"
 Mails out notifications for all revisions on the way from \fBrev1\fR to \fBrev2\fR. If \fBrev1\fR is skipped, \fBrev2~1\fR is assumed.
 
