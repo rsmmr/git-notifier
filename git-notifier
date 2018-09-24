@@ -765,7 +765,7 @@ def commit(current, rev, force=False, subject_head=None):
     subject = "%s: %s" % (subject_head, subject[0])
 
     show_cmd = "show -s --no-color --pretty=medium %s" % rev
-    diff_cmd = "diff-tree --root --patch-with-stat --no-color --ignore-space-at-eol --textconv %s %s" % (merge_diff, rev)
+    diff_cmd = "diff-tree --root --patch-with-stat --no-color --ignore-space-at-eol --textconv --ext-diff %s %s" % (merge_diff, rev)
     stat_cmd = "diff-tree --root --stat --no-color --ignore-space-at-eol %s" % rev
 
     sendChangeMail(rev, subject, heads, show_cmd, diff_cmd, stat_cmd)
