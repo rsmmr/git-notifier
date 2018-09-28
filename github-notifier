@@ -24,7 +24,7 @@ except ImportError:
             super(ConfigParser, self).__init__(*args, **kw)
 
 
-VERSION   = "0.7-31"  # Filled in automatically.
+VERSION   = "0.7-33"  # Filled in automatically.
 
 Name       = "github-notifier"
 ConfigFile = "./%s.cfg" % Name
