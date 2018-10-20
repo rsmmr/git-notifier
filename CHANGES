@@ -1,4 +1,10 @@
 
+0.7-35 | 2018-10-20 15:36:14 -0700
+
+  * Add -public/-private github-notifier option suffixes These allow
+    github-notifier configuration options to conditionally apply based
+    upon a given GitHub repo's public/private status. (Jon Siwek)
+
 0.7-33 | 2018-09-28 07:55:15 -0700
 
   * Call git's diff-tree with "--ext-diff" to support externl diff

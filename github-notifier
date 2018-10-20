@@ -24,7 +24,7 @@ except ImportError:
             super(ConfigParser, self).__init__(*args, **kw)
 
 
-VERSION   = "0.7-33"  # Filled in automatically.
+VERSION   = "0.7-35"  # Filled in automatically.
 
 Name       = "github-notifier"
 ConfigFile = "./%s.cfg" % Name
@@ -114,10 +114,26 @@ def runNotifier(repo):
         opts += ["--noupdate"]
 
     for (key, value) in repo.rset.notifier_options.items():
-        if value:
-            opts += ["--%s=%s" % (key, value)]
-        else:
-            opts += ["--%s" % key]
+        public_option = key.endswith("-public")
+        private_option = key.endswith("-private")
+
+        if public_option:
+            key = key[:len(key) - len("-public")]
+        elif private_option:
+            key = key[:len(key) - len("-private")]
+
+        use_option = True
+
+        if private_option:
+            use_option = repo.priv
+        if public_option:
+            use_option = not repo.priv
+
+        if use_option:
+            if value:
+                opts += ["--%s=%s" % (key, value)]
+            else:
+                opts += ["--%s" % key]
 
     gn = os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), "git-notifier"))
     cmd = "%s %s" % (gn, " ".join(opts))
@@ -126,15 +142,10 @@ def runNotifier(repo):
     runCommand(cmd)
     popDirectory()
 
-def gitRepositories(rset, org = None):
-    if rset.user and rset.token:
-        gh = github.Github(rset.user, rset.token)
-    else:
-        gh = github.Github()
-
+def gitRepositories(rset, gh, org = None):
     try:
-        repos = [Repository(rset, org, repo.name) for repo in gh.get_user(org).get_repos()]
-        repos += [Repository(rset, org, repo.name) for repo in gh.get_organization(org).get_repos()]
+        repos = [Repository(rset, org, repo.name, repo.private) for repo in gh.get_user(org).get_repos()]
+        repos += [Repository(rset, org, repo.name, repo.private) for repo in gh.get_organization(org).get_repos()]
     except github.GithubException as e:
         error("GitHub exception: %s" % e._GithubException__data["message"])
 
@@ -145,10 +156,11 @@ def gitRepositories(rset, org = None):
 
 # Information about one repository.
 class Repository:
-    def __init__(self, rset, org, name):
+    def __init__(self, rset, org, name, priv):
         if name.endswith(".git"):
             name = name[:-4]
 
+        self.priv = priv
         self.name = name
         self.org = org
         self.rset = rset
@@ -200,6 +212,11 @@ class RepositorySet:
         include = set()
         exclude = set()
 
+        if repos and self.user and self.token:
+            gh = github.Github(self.user, self.token)
+        else:
+            gh = github.Github()
+
         for r in repos:
 
             if r.startswith("-"):
@@ -225,9 +242,10 @@ class RepositorySet:
                 error("can't parse '%s'" % r)
 
             if name == "*":
-                srepos = gitRepositories(self, org)
+                srepos = gitRepositories(self, gh, org)
             else:
-                srepos = [Repository(self, org, name)]
+                priv = gh.get_repo(org + '/' + name).private
+                srepos = [Repository(self, org, name, priv)]
 
             for repo in srepos:
                 all[str(repo)] = repo

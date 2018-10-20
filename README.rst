@@ -3,7 +3,7 @@
 .. |date| date::
 
 .. Version number is filled in automatically.
-.. |version| replace:: 0.7-33
+.. |version| replace:: 0.7-35
 
 git-notifier
 ============
@@ -412,6 +412,17 @@ Within a set one can specify any of the standard ``git-notifier``
 options by prefixing them with ``notifier-``. The
 ``notifier-mailinglist`` options above is an example. To, e.g., set a
 Reply-To header, you would use ``notifier-replyto=somebody@else.net``.
+
+By default, these options apply to both private and public repos.  To
+qualify that a given option should only apply to private repos, one can
+suffix the option with ``-private``.  Simarly, adding ``-public`` will
+cause the option to be applied to just public repos and not private
+ones.  For example::
+
+    [FooRepos]
+    repositories=foo/*
+    notifier-mailinglist-public=foo@bar.com
+    notifier-mailinglist-private=foo-internal@bar.com
 
 Usage
 ^^^^^
