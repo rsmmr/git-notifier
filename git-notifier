@@ -5,6 +5,7 @@ import itertools
 import optparse
 import os
 import quopri
+import shlex
 import shutil
 import smtplib
 import string
@@ -44,6 +45,13 @@ NoDiff     = "[nodiff]"
 NoMail     = "[nomail]"
 CfgName    = "git-notifier.conf"
 CfgSection = "git-notifier"
+
+try:
+    # Find Git binary in a cross-platform way
+    # One-liner based on https://stackoverflow.com/a/28909933/2883579
+    GIT_BINARY = next(os.path.join(path, "git") for path in os.environ["PATH"].split(os.pathsep) if os.access(os.path.join(path, "git"), os.X_OK))
+except StopIteration:
+    raise RuntimeError("Git binary not found in PATH")
 
 try:
     # 2-tuple: (name, boolean) with boolen being True if file must exist.
@@ -348,8 +356,12 @@ def error(msg):
     sys.exit(1)
 
 def git(args, stdout_to=subprocess.PIPE, all=False):
+    # Even though we'll split again later, we need to turn a list/tuple into a string
+    # because in some cases one element of the list has more than a single argument.
     if isinstance(args, tuple) or isinstance(args, list):
         args = " ".join(args)
+
+    args = shlex.split(args)
 
     try:
         if Config.debug:
@@ -359,7 +371,7 @@ def git(args, stdout_to=subprocess.PIPE, all=False):
         pass
 
     try:
-        child = subprocess.Popen("git " + args, shell=True, stdin=None, stdout=stdout_to, stderr=subprocess.PIPE)
+        child = subprocess.Popen([GIT_BINARY] + args, stdin=None, stdout=stdout_to, stderr=subprocess.PIPE)
         (stdout, stderr) = child.communicate()
     except OSError as e:
         error("cannot start git: %s" % str(e))
