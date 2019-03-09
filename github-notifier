@@ -244,7 +244,8 @@ class RepositorySet:
             if name == "*":
                 srepos = gitRepositories(self, gh, org)
             else:
-                priv = gh.get_repo(org + '/' + name).private
+                gh_name = name[:-5] if name.endswith('.wiki') else name
+                priv = gh.get_repo(org + '/' + gh_name).private
                 srepos = [Repository(self, org, name, priv)]
 
             for repo in srepos:
