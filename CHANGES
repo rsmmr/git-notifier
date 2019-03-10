@@ -1,4 +1,12 @@
 
+0.7-40 | 2019-03-10 08:29:53 -0700
+
+  * No longer go through the shell to run commands from git-notifier
+    and github-notifier. (Samir Aguiar)
+
+  * Support GitHub Wiki repositories in github-notifier. (Wolfgang
+    Schnerring)
+
 0.7-35 | 2018-10-20 15:36:14 -0700
 
   * Add -public/-private github-notifier option suffixes These allow

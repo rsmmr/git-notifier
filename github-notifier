@@ -24,7 +24,14 @@ except ImportError:
             super(ConfigParser, self).__init__(*args, **kw)
 
 
-VERSION   = "0.7-35"  # Filled in automatically.
+VERSION   = "0.7-40"  # Filled in automatically.
+
+try:
+    # Find Git binary in a cross-platform way
+    # One-liner based on https://stackoverflow.com/a/28909933/2883579
+    GitBinary = next(os.path.join(path, "git") for path in os.environ["PATH"].split(os.pathsep) if os.access(os.path.join(path, "git"), os.X_OK))
+except StopIteration:
+    raise RuntimeError("Git binary not found in PATH")
 
 Name       = "github-notifier"
 ConfigFile = "./%s.cfg" % Name
@@ -55,19 +62,17 @@ def pushDirectory(dir):
 def popDirectory():
     os.chdir(DirectoryStack.pop())
 
-def runCommand(args):
-    if isinstance(args, tuple) or isinstance(args, list):
-        args = " ".join(args)
+def runCommand(args, stdout=None, stderr=None):
+    environment = { "PATH": os.environ["PATH"], "GIT_ASKPASS": "echo" }
 
     if Options.debug:
-        sys.stderr.write("> %s\n" % args)
+        sys.stderr.write("> %s\n" % (" ".join(args)))
 
     try:
-        args = "GIT_ASKPASS=echo %s" % args
-        child = subprocess.Popen(args, shell=True, stdin=None, stdout=None, stderr=None)
+        child = subprocess.Popen(args, stdin=None, stdout=stdout, stderr=stderr, env=environment)
         (stdout, stderr) = child.communicate()
     except OSError as e:
-        error("cannot run command '%s': %s" % (args, e))
+        error("cannot run command '%s': %s" % (" ".join(args), e))
 
     if child.returncode != 0:
         error("command failed with exit code %d" % child.returncode)
@@ -90,10 +95,10 @@ def gitUpdate(repo):
     log("updating %s" % repo)
 
     pushDirectory(repo.path)
-    runCommand("git --bare init --quiet")
-    runCommand("git --bare fetch --prune --quiet %s +refs/heads/*:refs/heads/*" % repo.url(True))
-    runCommand("git --bare fetch --prune --quiet %s +refs/tags/*:refs/tags/*" % repo.url(True))
-    runCommand("git remote update >/dev/null 2>&1")
+    runCommand([GitBinary, "--bare", "init", "--quiet"])
+    runCommand([GitBinary, "--bare", "fetch", "--prune", "--quiet", repo.url(True), "+refs/heads/*:refs/heads/*"])
+    runCommand([GitBinary, "--bare", "fetch", "--prune", "--quiet", repo.url(True), "+refs/tags/*:refs/tags/*"])
+    runCommand([GitBinary, "remote", "update"], stdout=open(os.devnull, 'wb'), stderr=subprocess.STDOUT)
 
     # git-notifier picks this up.
     fname = open("repo-name.dat", "w")
@@ -136,10 +141,9 @@ def runNotifier(repo):
                 opts += ["--%s" % key]
 
     gn = os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), "git-notifier"))
-    cmd = "%s %s" % (gn, " ".join(opts))
 
     pushDirectory(repo.path)
-    runCommand(cmd)
+    runCommand([gn] + opts)
     popDirectory()
 
 def gitRepositories(rset, gh, org = None):
