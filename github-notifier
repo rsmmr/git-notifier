@@ -25,7 +25,7 @@ except ImportError:
             super(ConfigParser, self).__init__(*args, **kw)
 
 
-VERSION   = "0.7-41"  # Filled in automatically.
+VERSION   = "0.7-42"  # Filled in automatically.
 
 try:
     # Find Git binary in a cross-platform way

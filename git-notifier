@@ -36,7 +36,7 @@ except ImportError:
     from ConfigParser import NoSectionError
     from ConfigParser import NoOptionError
 
-VERSION    = "0.7-41"  # Filled in automatically.
+VERSION    = "0.7-42"  # Filled in automatically.
 
 Name       = "git-notifier"
 CacheFile  = ".%s.dat" % Name
@@ -192,10 +192,18 @@ class GitConfig:
         else:
             self.log = sys.stderr
 
-        if not self.users and "GL_ADMINDIR" in os.environ:
-            users = os.path.join(os.environ["GL_ADMINDIR"], "conf/sender.cfg")
-            if os.path.exists(users):
-                self.users = users
+        if not self.users:
+            admindir = None
+
+            for i in ["GL_ADMIN_BASE", "GL_ADMINDIR"]:
+                if i in os.environ:
+                    admindir = os.environ[i]
+                    break
+
+            if admindir:
+                users = os.path.join(admindir, "conf/sender.cfg")
+                if os.path.exists(users):
+                    self.users = users
 
         self.head_include = set()
         self.head_exclude = set()
