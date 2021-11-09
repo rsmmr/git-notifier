@@ -8,6 +8,7 @@ import os
 import shutil
 import subprocess
 import sys
+import fnmatch
 import github
 
 try:
@@ -24,7 +25,7 @@ except ImportError:
             super(ConfigParser, self).__init__(*args, **kw)
 
 
-VERSION   = "0.7-40"  # Filled in automatically.
+VERSION   = "0.7-41"  # Filled in automatically.
 
 try:
     # Find Git binary in a cross-platform way
@@ -146,7 +147,7 @@ def runNotifier(repo):
     runCommand([gn] + opts)
     popDirectory()
 
-def gitRepositories(rset, gh, org = None):
+def gitRepositories(rset, gh, org, pattern="*"):
     try:
         repos = [Repository(rset, org, repo.name, repo.private) for repo in gh.get_user(org).get_repos()]
         repos += [Repository(rset, org, repo.name, repo.private) for repo in gh.get_organization(org).get_repos()]
@@ -156,7 +157,7 @@ def gitRepositories(rset, gh, org = None):
     if not repos:
         log("warning: no GitHub repositories found for set %s" % rset.name)
 
-    return repos
+    return [r for r in repos if fnmatch.fnmatch(r.name, pattern)]
 
 # Information about one repository.
 class Repository:
@@ -245,8 +246,8 @@ class RepositorySet:
             else:
                 error("can't parse '%s'" % r)
 
-            if name == "*":
-                srepos = gitRepositories(self, gh, org)
+            if name.find("*") >= 0:
+                srepos = gitRepositories(self, gh, org, name)
             else:
                 gh_name = name[:-5] if name.endswith('.wiki') else name
                 priv = gh.get_repo(org + '/' + gh_name).private

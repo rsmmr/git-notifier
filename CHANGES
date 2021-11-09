@@ -1,4 +1,13 @@
 
+0.7-41 | 2021-11-09 17:59:40 +0100
+
+  * github-notifier: Support globs when selecting repositories. So far
+    we only allowed for an exact string `*` to mean "all
+    repositories". Now we actually expand globs when the repository
+    name contains any `*` (e.g., `repositories=zeek/spicy-*`). This
+    works for exclusions as well (e.g.,
+    `repositorieszeek/*,-zeek/spicy-*`). (Robin Sommer)
+
 0.7-40 | 2019-03-10 08:29:53 -0700
 
   * No longer go through the shell to run commands from git-notifier

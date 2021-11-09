@@ -3,7 +3,7 @@
 .. |date| date::
 
 .. Version number is filled in automatically.
-.. |version| replace:: 0.7-40
+.. |version| replace:: 0.7-41
 
 git-notifier
 ============
@@ -387,10 +387,10 @@ The ``repositories`` entry takes a list of command-separated
 repositories to monitor. Each repository has the form
 ``<user>/<repo>``, where ``<user>`` is a GitHub user (or organization)
 and ``<repo>`` is a repository that the user (or organization)
-maintains. ``<repo>`` can be the wildcard ``*`` to monitor *all* of a
-user's repositories (e.g., ``repositories=bro/*``). One can exclude
-individual repositories by prefixing them with a dash (e.g.,
-``repositories=bro/*,-bro/time-machine``).
+maintains. ``<repo>`` may contain ``*`` as a wildcard to monitor only
+matching repositories (e.g., ``repositories=zeek/spicy-*``). One can
+exclude individual repositories by prefixing them with a dash (e.g.,
+``repositories=zeek/*,-zeek/spicy-*``).
 
 Authentication
 ^^^^^^^^^^^^^^

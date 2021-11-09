@@ -36,7 +36,7 @@ except ImportError:
     from ConfigParser import NoSectionError
     from ConfigParser import NoOptionError
 
-VERSION    = "0.7-40"  # Filled in automatically.
+VERSION    = "0.7-41"  # Filled in automatically.
 
 Name       = "git-notifier"
 CacheFile  = ".%s.dat" % Name
