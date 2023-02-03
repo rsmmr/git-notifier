@@ -1,3 +1,7 @@
+0.8 | 2023-02-03 07:24:44 +0100
+
+  * Ignore invalid UTF-8 in diffs. (Robin Sommer)
+
 0.7-42 | 2021-12-13 10:53:49 +0100
 
   * Check both GL_ADMIN_BASE and GL_ADMINDIR when looking for

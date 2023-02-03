@@ -36,7 +36,7 @@ except ImportError:
     from ConfigParser import NoSectionError
     from ConfigParser import NoOptionError
 
-VERSION    = "0.7-42"  # Filled in automatically.
+VERSION    = "0.8"  # Filled in automatically.
 
 Name       = "git-notifier"
 CacheFile  = ".%s.dat" % Name
@@ -739,7 +739,7 @@ def sendChangeMail(rev, subject, heads, show_cmd, diff_cmd, stat_cmd):
     out.write(Separator)
 
     if tname:
-        for line in open(tname):
+        for line in open(tname, errors='replace'):
             out.write(line)
 
     out.write(footer + "\n")
