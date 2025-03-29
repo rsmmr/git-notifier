@@ -36,7 +36,7 @@ except ImportError:
     from ConfigParser import NoSectionError
     from ConfigParser import NoOptionError
 
-VERSION    = "0.8"  # Filled in automatically.
+VERSION    = "0.8-2"  # Filled in automatically.
 
 Name       = "git-notifier"
 CacheFile  = ".%s.dat" % Name
@@ -102,6 +102,7 @@ Options = [
     ("mailserverpassword", True, None, "Password for SMTP server. If None, no authentication is used"),
     ("mailserverfrom", True, None, "Explicit MAIL_FROM for SMTP server. If None, same as sender in email header"),
     ("config", True, ConfigPath, "Path to configuration file"),
+    ("commitsonly", False, False, "report only commits, no other state changes (tag, branches, head movements)"),
     ]
 
 class State:
@@ -645,6 +646,9 @@ def sendMail(subject, out, fname, rev=None, type=None):
         time.sleep(2)
 
 def entryAdded(key, value, rev):
+    if Config.commitsonly:
+        return
+
     if not reportHead(value):
         return
 
@@ -658,6 +662,9 @@ def entryAdded(key, value, rev):
     sendMail("%s '%s' created" % (key, value), out, fname, rev, type=key)
 
 def entryDeleted(key, value):
+    if Config.commitsonly:
+        return
+
     if not reportHead(value):
         return
 
@@ -838,6 +845,9 @@ def reportPath(current, revs, force=False, subject_head=None):
 
 # Sends a summary mail for a set of revisions.
 def headMoved(head, path):
+    if Config.commitsonly:
+        return
+
     if not reportHead(head):
         return
 

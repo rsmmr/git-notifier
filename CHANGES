@@ -1,3 +1,12 @@
+0.8-2 | 2025-03-29 10:13:47 +0100
+
+  * Add new flag ``--commitsonly`` to limit mails to actual commits. (Robin Sommer)
+
+    This skips reporting of new tags and branches, and heads that were
+    moved.
+
+  * Remove spurious file. (Robin Sommer)
+
 0.8 | 2023-02-03 07:24:44 +0100
 
   * Ignore invalid UTF-8 in diffs. (Robin Sommer)

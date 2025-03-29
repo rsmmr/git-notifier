@@ -3,7 +3,7 @@
 .. |date| date::
 
 .. Version number is filled in automatically.
-.. |version| replace:: 0.8
+.. |version| replace:: 0.8-2
 
 git-notifier
 ============
@@ -166,6 +166,9 @@ The options are:
         branch with ``-`` to *exclude* it: then all but the excluded
         ones are reported. ``<branches>`` is a list of comma-separated
         names of heads to treat this way.
+
+    ``--commitsonly``
+        Does not report changes to tags or branches, only new commits.
 
     ``--debug``
         Prints the mails that would normally be generated to
